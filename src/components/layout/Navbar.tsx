@@ -1,6 +1,6 @@
 "use client"
 
-import {useState} from "react"
+import {useEffect, useState} from "react"
 import Link from "next/link"
 import {GraduationCap, Menu, X} from "lucide-react"
 import {Button} from "@/components/ui/button"
@@ -8,6 +8,15 @@ import ThemeToggle from "./ThemeToggle"
 
 export default function Navbar() {
   let [open, setOpen] = useState(false)
+  let [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    function onScroll() {
+      setScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", onScroll)
+    return () => window.removeEventListener("scroll", onScroll)
+  }, [])
 
   const links = [
     {href: "/courses", label: "Browse Courses"},
@@ -17,8 +26,14 @@ export default function Navbar() {
   ]
 
   return (
-    <div className="sticky top-0 z-50 mt-4 px-4">
-      <nav className="bg-background/80 backdrop-blur border border-border rounded-xl max-w-[1200px] mx-auto">
+    <div
+      className={`sticky top-0 z-50 transition-all duration-300 ${scrolled ? "mt-0 px-0" : "mt-4 px-4"}`}
+    >
+      <nav
+        className={`bg-background/80 backdrop-blur border border-border mx-auto transition-all duration-300 ${
+          scrolled ? "max-w-full rounded-none" : "max-w-[1200px] rounded-xl"
+        }`}
+      >
         <div className="px-4 md:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 group shrink-0">
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-white cursor-pointer transition-transform duration-200 group-hover:scale-105 group-hover:shadow-md group-hover:shadow-primary/30">
