@@ -69,7 +69,7 @@ export default function Navbar() {
               size="sm"
               className="bg-primary hover:bg-primary-hover transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:-translate-y-0.5"
             >
-              Sign Up
+              <Link href="/signup">Sign Up</Link>
             </Button>
           </div>
 
