@@ -33,7 +33,7 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         {children}
-        <Toaster position="top-right" />
+        <Toaster position="top-center" />
       </body>
     </html>
   )
