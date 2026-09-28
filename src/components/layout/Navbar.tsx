@@ -65,12 +65,14 @@ export default function Navbar() {
             >
               Log In
             </Button>
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary-hover transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:-translate-y-0.5"
-            >
-              <Link href="/signup">Sign Up</Link>
-            </Button>
+            <Link href="/signup">
+              <Button
+                size="sm"
+                className="bg-primary hover:bg-primary-hover transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:-translate-y-0.5"
+              >
+                Sign Up
+              </Button>
+            </Link>
           </div>
 
           <div className="flex md:hidden items-center gap-2">

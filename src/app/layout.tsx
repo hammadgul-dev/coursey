@@ -33,7 +33,19 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
       </head>
       <body className={`${poppins.variable} font-sans antialiased`}>
         {children}
-        <Toaster position="top-center" />
+        <Toaster
+          position="top-center"
+          toastOptions={{
+            style: {
+              background: "var(--card)",
+              color: "var(--card-foreground)",
+              border: "1px solid var(--border)",
+              fontFamily: "var(--font-poppins)",
+              fontSize: "15px",
+              boxShadow: "0 8px 15px rgba(0, 0, 0, 0.12)",
+            },
+          }}
+        />
       </body>
     </html>
   )
