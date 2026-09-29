@@ -58,13 +58,15 @@ export default function Navbar() {
 
           <div className="hidden md:flex items-center gap-3">
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="sm"
-              className="transition-colors duration-200 hover:bg-accent hover:text-primary"
-            >
-              Log In
-            </Button>
+            <Link href="/login">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="transition-colors duration-200 hover:bg-accent hover:text-primary"
+              >
+                Log In
+              </Button>
+            </Link>
             <Link href="/signup">
               <Button
                 size="sm"
