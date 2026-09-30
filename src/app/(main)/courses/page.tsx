@@ -10,12 +10,6 @@ import CoursesExplorer from "./_components/CoursesExplorer"
 export default function CoursesPage() {
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-      <p className="mb-4 text-sm text-muted-foreground">
-        Home <span className="mx-1">›</span> Catalog{" "}
-        <span className="mx-1">›</span>{" "}
-        <span className="text-foreground">All Tracks</span>
-      </p>
-
       <div className="mb-5 animate-in fade-in slide-in-from-bottom-2 duration-500">
         <h1 className="mb-2 text-3xl font-bold sm:text-4xl">Browse Courses</h1>
         <p className="max-w-2xl text-muted-foreground">
