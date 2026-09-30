@@ -64,8 +64,6 @@ export default function CoursesExplorer({
           setPage(1)
         }}
         count={filtered.length}
-        view={view}
-        setView={setView}
       />
 
       <ActiveFilters
@@ -89,7 +87,7 @@ export default function CoursesExplorer({
         />
 
         <div>
-          <CourseGrid courses={paginated} view={view} />
+          <CourseGrid courses={paginated} />
           <Pagination
             page={page}
             totalPages={totalPages}

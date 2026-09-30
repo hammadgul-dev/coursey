@@ -118,7 +118,7 @@ export default function FilterSidebar({
         <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5]">
           <Sparkles size={14} /> Why Text-First?
         </p>
-        <p className="text-xs leading-relaxed text-muted-foreground">
+        <p className="text-xs leading-relaxed text-justify text-muted-foreground">
           Reading code documentation and technical prose is proven 3.5× faster
           than video lectures for retention and reference speed.
         </p>

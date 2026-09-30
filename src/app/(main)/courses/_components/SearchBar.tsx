@@ -1,16 +1,10 @@
 "use client"
-import {Search, Grid3x3, List} from "lucide-react"
+import {Search} from "lucide-react"
 
-export default function SearchBar({
-  query,
-  onChange,
-  count,
-  view,
-  setView,
-}: any) {
+export default function SearchBar({query, onChange}: any) {
   return (
     <>
-      <div className="relative mb-5 max-w-2xl">
+      <div className="relative mb-12 max-w-2xl mx-auto w-full">
         <Search
           size={17}
           className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground"
