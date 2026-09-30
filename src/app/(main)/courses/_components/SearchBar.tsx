@@ -23,17 +23,7 @@ export default function SearchBar({
         />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center gap-2">
-          {["All Categories", "All Levels", "Most Popular"].map((l) => (
-            <button
-              key={l}
-              className="flex h-9 cursor-pointer items-center gap-1.5 rounded-lg border border-border bg-card px-3 text-sm transition-colors duration-200 hover:border-[#4F46E5]/50"
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4 flex flex-wrap items-center justify-end gap-3 border-b border-border pb-4">
         <div className="flex items-center gap-3">
           <span className="text-sm text-muted-foreground">
             Showing {count} text courses
