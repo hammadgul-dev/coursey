@@ -32,7 +32,7 @@ export default function CourseTabs() {
       ?.scrollIntoView({behavior: "smooth", block: "start"})
 
   return (
-    <div className="sticky top-16 z-20 -mx-4 overflow-x-auto border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-950 sm:mx-0 sm:px-0">
+    <div className="sticky top-16 z-20 -mx-4 overflow-x-auto scrollbar-none border-b border-gray-200 bg-white px-4 py-2 dark:border-gray-800 dark:bg-gray-950 sm:mx-0 sm:px-0">
       <div className="flex min-w-max gap-6">
         {tabs.map((t) => (
           <button

@@ -4,6 +4,7 @@ import Reveal from "./Reveal"
 import EnrollButtons from "./EnrollButtons"
 
 export default function CourseHero({course, lessons}: any) {
+  console.log(course)
   return (
     <section className="border-b border-gray-200 bg-indigo-50/60 dark:border-gray-800 dark:bg-indigo-950/20">
       <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
@@ -28,11 +29,11 @@ export default function CourseHero({course, lessons}: any) {
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-4xl lg:text-5xl">
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl lg:text-4xl">
             {course.title}
           </h1>
-          <p className="mt-4 text-base leading-relaxed text-gray-600 dark:text-gray-300 sm:text-lg">
-            {course.description ??
+          <p className="mt-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
+            {course.desc ??
               "A text-first deep dive built for focused readers. No video fluff, just high-density lessons with interactive checkpoints."}
           </p>
 

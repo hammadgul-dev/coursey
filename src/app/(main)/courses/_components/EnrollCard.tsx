@@ -19,13 +19,13 @@ export default function EnrollCard({lessons}: any) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 transition-colors duration-300 hover:border-indigo-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500/50">
+    <div className="rounded-xl border border-gray-200 bg-white p-5 transition-colors duration-300 hover:border-indigo-300 dark:border-gray-800 dark:bg-gray-900 dark:hover:border-indigo-500/50">
       <p className="text-3xl font-bold text-gray-900 dark:text-white">Free</p>
       <p className="mb-5 mt-1 text-xs text-gray-500 dark:text-gray-400">
         100% free forever, no credit card
       </p>
       <EnrollButtons stacked />
-      <div className="my-5 border-t border-gray-100 dark:border-gray-800" />
+      <div className="my-2 border-t border-gray-100 dark:border-gray-800" />
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         This course includes
       </p>
@@ -47,7 +47,7 @@ export default function EnrollCard({lessons}: any) {
       <div className="my-5 border-t border-gray-100 dark:border-gray-800" />
       <button
         onClick={copy}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-200 py-2 text-sm text-gray-600 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-[0.98] dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border border-gray-200 py-1 text-sm text-gray-600 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-[0.98] dark:border-gray-700 dark:text-gray-300 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
       >
         <Link2 size={14} />
         Copy Link
