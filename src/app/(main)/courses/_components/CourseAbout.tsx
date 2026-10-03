@@ -10,7 +10,7 @@ export default function CourseAbout({course}: any) {
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
         About this course
       </h2>
-      <p className="mt-4 leading-relaxed text-gray-600 dark:text-gray-300">
+      <p className="mt-4 leading-relaxed text-sm text-justify text-gray-600 dark:text-gray-300">
         Most video courses force you into a passive viewing pace. {course.title}{" "}
         takes an uncompromising text-first approach: every concept is laid out
         in high-density, rigorously written lessons you can scan, search and
