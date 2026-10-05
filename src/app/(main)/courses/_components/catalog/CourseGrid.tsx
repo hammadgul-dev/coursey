@@ -1,7 +1,7 @@
 "use client"
 import {AnimatePresence, motion} from "framer-motion"
 import CourseCard from "./CourseCard"
-import type {Course} from "../_data/courses"
+import type {Course} from "../../_data/courses"
 
 export default function CourseGrid({courses}: {courses: Course[]}) {
   if (courses.length === 0) {

@@ -1,11 +1,11 @@
 "use client"
-import {useState, useMemo} from "react"
+import {useMemo, useState} from "react"
 import SearchBar from "./SearchBar"
 import FilterSidebar from "./FilterSidebar"
 import ActiveFilters from "./ActiveFilters"
 import CourseGrid from "./CourseGrid"
 import Pagination from "./Pagination"
-import type {Course} from "../_data/courses"
+import type {Course} from "@/data/courses"
 
 let PAGE_SIZE = 9
 

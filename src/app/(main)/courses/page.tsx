@@ -4,8 +4,8 @@ import {
   levels,
   readingTimeOptions,
   features,
-} from "./_data/courses"
-import CoursesExplorer from "./_components/CoursesExplorer"
+} from "@/data/courses"
+import CoursesExplorer from "./_components/catalog/CoursesExplorer"
 
 export default function CoursesPage() {
   return (
