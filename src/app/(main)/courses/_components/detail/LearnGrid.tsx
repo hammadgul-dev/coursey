@@ -1,6 +1,6 @@
 import {Check} from "lucide-react"
-import Reveal from "./Reveal"
-import {learn} from "../_data/courseDetail"
+import Reveal from "@/components/ui/Reveal"
+import {learn} from "@/data/courseDetail"
 
 export default function LearnGrid() {
   return (

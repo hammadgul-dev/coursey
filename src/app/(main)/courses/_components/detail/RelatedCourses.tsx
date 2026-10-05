@@ -1,6 +1,6 @@
 import Link from "next/link"
 import {ArrowRight, BookOpen, Star} from "lucide-react"
-import Reveal from "./Reveal"
+import Reveal from "@/components/ui/Reveal"
 
 export default function RelatedCourses({items}: any) {
   return (

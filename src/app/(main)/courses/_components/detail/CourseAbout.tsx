@@ -1,6 +1,6 @@
 import {BookOpen, EyeOff, ListChecks} from "lucide-react"
-import Reveal from "./Reveal"
-import {highlights} from "../_data/courseDetail"
+import Reveal from "@/components/ui/Reveal"
+import {highlights} from "@/data/courseDetail"
 
 let icons = [BookOpen, EyeOff, ListChecks]
 

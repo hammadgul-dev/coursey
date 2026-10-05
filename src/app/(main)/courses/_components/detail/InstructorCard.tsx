@@ -1,5 +1,5 @@
-import Reveal from "./Reveal"
-import {instructor as i} from "../_data/courseDetail"
+import Reveal from "@/components/ui/Reveal"
+import {instructor as i} from "@/data/courseDetail"
 
 export default function InstructorCard() {
   let initials = i.name

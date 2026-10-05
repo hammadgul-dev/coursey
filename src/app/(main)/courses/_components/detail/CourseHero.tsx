@@ -1,6 +1,6 @@
 import Link from "next/link"
 import {ArrowLeft, BookOpen, Star, Users} from "lucide-react"
-import Reveal from "./Reveal"
+import Reveal from "@/components/ui/Reveal"
 import EnrollButtons from "./EnrollButtons"
 
 export default function CourseHero({course, lessons}: any) {

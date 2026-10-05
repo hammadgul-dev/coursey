@@ -1,18 +1,17 @@
 import {notFound} from "next/navigation"
-import {courses} from "../_data/courses"
-import {modules, totalLessons} from "../_data/courseDetail"
-import CourseHero from "../_components/CourseHero"
-import CourseTabs from "../_components/CourseTabs"
-import CourseAbout from "../_components/CourseAbout"
-import LearnGrid from "../_components/LearnGrid"
-import Curriculum from "../_components/Curriculum"
-import InstructorCard from "../_components/InstructorCard"
-import EnrollCard from "../_components/EnrollCard"
-import RelatedCourses from "../_components/RelatedCourses"
-import Reveal from "../_components/Reveal"
+import {courses} from "@/data/courses"
+import {modules, totalLessons} from "@/data/courseDetail"
+import CourseHero from "../_components/detail/CourseHero"
+import CourseTabs from "../_components/detail/CourseTabs"
+import CourseAbout from "../_components/detail/CourseAbout"
+import LearnGrid from "../_components/detail/LearnGrid"
+import Curriculum from "../_components/detail/Curriculum"
+import InstructorCard from "../_components/detail/InstructorCard"
+import EnrollCard from "../_components/detail/EnrollCard"
+import RelatedCourses from "../_components/detail/RelatedCourses"
+import Reveal from "@/components/ui/Reveal"
 
 let find = (id: string) => (courses as any[]).find((c) => String(c.id) === id)
-
 export async function generateMetadata({params}: any) {
   let {id} = await params
   let course = find(id)
