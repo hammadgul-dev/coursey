@@ -62,7 +62,7 @@ export default function CourseHero({course, lessons}: any) {
           </div>
 
           <div className="mt-8 lg:hidden">
-            <EnrollButtons />
+            <EnrollButtons courseId={course.id} />
           </div>
         </Reveal>
       </div>

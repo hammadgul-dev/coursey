@@ -3,14 +3,17 @@
 import {useState} from "react"
 import toast from "react-hot-toast"
 import {ArrowRight, Bookmark, Check} from "lucide-react"
+import {useRouter} from "next/navigation"
 
-export default function EnrollButtons({stacked = false}: any) {
+export default function EnrollButtons({stacked = false, courseId}: any) {
   let [enrolled, setEnrolled] = useState(false)
   let [saved, setSaved] = useState(false)
+  let router = useRouter()
 
   let enroll = () => {
     setEnrolled(true)
     toast.success("Enrolled successfully")
+    router.push(`/courses/${courseId}/lessons/1`)
   }
 
   let save = () => {

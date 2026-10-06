@@ -23,6 +23,7 @@ let Code = ({children}: any) => (
 export async function generateMetadata({params}: any) {
   let {lessonId} = await params
   let l = allLessons.find((x: any) => String(x.id) === lessonId)
+
   return {title: l ? `${l.t} | Coursey` : "Lesson | Coursey"}
 }
 
