@@ -80,20 +80,6 @@ export default function StudentDashboardPage() {
               ))}
             </div>
           </div>
-
-          <div className="hidden rounded-xl border border-indigo-100 bg-indigo-50 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/10 lg:block">
-            <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-indigo-600 dark:text-indigo-400">
-              <Lightbulb className="h-3.5 w-3.5" />
-              Focus Tip
-            </p>
-            <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-300">
-              Press{" "}
-              <kbd className="rounded border border-indigo-200 px-1 dark:border-indigo-500/40">
-                ]
-              </kbd>{" "}
-              inside any reading track to toggle distraction-free mode.
-            </p>
-          </div>
         </aside>
 
         <main className="min-w-0 space-y-10">

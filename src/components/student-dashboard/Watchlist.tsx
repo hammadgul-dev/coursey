@@ -40,18 +40,11 @@ export default function Watchlist({items}: any) {
             Courses saved for future reading sessions
           </p>
         </div>
-        <Link
-          href="/courses"
-          className="group flex shrink-0 cursor-pointer items-center gap-1 text-sm font-medium text-indigo-600 hover:text-indigo-700 dark:text-indigo-400"
-        >
-          View Full Watchlist
-          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-        </Link>
       </div>
 
       {list.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500 dark:border-zinc-700 dark:text-gray-400">
-          Your Watchlist Is Empty. like.
+          Your Watchlist Is Empty
         </div>
       ) : (
         <motion.div
