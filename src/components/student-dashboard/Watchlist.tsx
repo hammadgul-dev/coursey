@@ -14,7 +14,7 @@ export default function Watchlist({items}: any) {
 
   let onRemove = (id: string) => {
     remove(id)
-    toast.success("Watchlist se hata diya")
+    toast.success("Removed from watchlist")
   }
 
   let onEnroll = (id: string) => {
@@ -51,7 +51,7 @@ export default function Watchlist({items}: any) {
 
       {list.length === 0 ? (
         <div className="mt-4 rounded-xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500 dark:border-zinc-700 dark:text-gray-400">
-          Watchlist khaali hai. Courses browse karke bookmark karo.
+          Your Watchlist Is Empty. like.
         </div>
       ) : (
         <motion.div

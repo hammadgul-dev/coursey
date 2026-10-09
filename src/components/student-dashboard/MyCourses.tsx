@@ -150,7 +150,7 @@ export default function MyCourses({courses}: any) {
                     </Link>
                     <button
                       onClick={() =>
-                        toast.success("Certificate jald available hoga")
+                        toast.success("Certificates Will Ve Available Soon")
                       }
                       className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-transparent bg-indigo-50 px-4 text-sm font-medium text-indigo-600 transition-colors hover:border-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-400"
                     >
