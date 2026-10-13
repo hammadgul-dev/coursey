@@ -25,14 +25,14 @@ export default function Watchlist({items}: any) {
   return (
     <motion.section
       id="watchlist"
-      className="scroll-mt-24"
+      className="min-w-0 scroll-mt-24"
       initial={{opacity: 0, y: 16}}
       whileInView={{opacity: 1, y: 0}}
       viewport={{once: true, margin: "-60px"}}
       transition={{duration: 0.5}}
     >
       <div className="flex items-end justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             Watchlist ({list.length})
           </h2>
@@ -60,7 +60,7 @@ export default function Watchlist({items}: any) {
                 animate={{opacity: 1, y: 0}}
                 exit={{opacity: 0, scale: 0.95}}
                 transition={{duration: 0.25}}
-                className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900"
+                className="flex min-w-0 flex-col rounded-xl border border-gray-200 bg-white p-3 transition-colors hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900"
               >
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-indigo-50 px-2 py-1.5 dark:bg-indigo-500/10">
                   <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
@@ -81,9 +81,6 @@ export default function Watchlist({items}: any) {
                 </Link>
                 <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                   {w.instructor}
-                </p>
-                <p className="mt-2 line-clamp-2 text-xs text-gray-600 dark:text-gray-400">
-                  {w.desc}
                 </p>
 
                 <div className="mt-auto flex items-center justify-between pt-4 text-xs text-gray-500 dark:text-gray-400">

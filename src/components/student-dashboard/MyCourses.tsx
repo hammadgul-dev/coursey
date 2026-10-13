@@ -25,14 +25,14 @@ export default function MyCourses({courses}: any) {
   return (
     <motion.section
       id="my-courses"
-      className="scroll-mt-24"
+      className="min-w-0 scroll-mt-24"
       initial={{opacity: 0, y: 16}}
       whileInView={{opacity: 1, y: 0}}
       viewport={{once: true, margin: "-60px"}}
       transition={{duration: 0.5}}
     >
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
             My Courses
           </h2>
@@ -40,12 +40,12 @@ export default function MyCourses({courses}: any) {
             Full curriculum catalog in your enrolled library
           </p>
         </div>
-        <div className="flex w-fit gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex w-full justify-between gap-1 rounded-lg border border-gray-200 bg-gray-50 p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-fit sm:justify-center">
           {tabs.map((t: any) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`relative cursor-pointer rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+              className={`relative cursor-pointer rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
                 tab === t.key
                   ? "text-indigo-600 dark:text-indigo-400"
                   : "text-gray-600 hover:text-indigo-600 dark:text-gray-400"
@@ -76,7 +76,7 @@ export default function MyCourses({courses}: any) {
               animate={{opacity: 1, y: 0}}
               exit={{opacity: 0, scale: 0.96}}
               transition={{duration: 0.25}}
-              className="rounded-xl border border-gray-200 bg-white p-5 transition-colors hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900"
+              className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 transition-colors hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900"
             >
               <div className="flex items-center justify-between gap-2">
                 {c.status === "progress" ? (
