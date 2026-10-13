@@ -141,6 +141,10 @@
   --text-faint: #6b7284;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
