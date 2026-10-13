@@ -44,7 +44,7 @@ export default function CoursesManager() {
   }
 
   return (
-    <div>
+    <div className="min-w-0">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative w-full sm:max-w-xs">
           <Search
@@ -58,12 +58,12 @@ export default function CoursesManager() {
             className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           />
         </div>
-        <div className="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="flex w-full gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-fit">
           {tabs.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`relative shrink-0 cursor-pointer rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200 ${
+              className={`relative shrink-0 cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
                 tab === t
                   ? "text-white"
                   : "text-gray-600 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
@@ -108,7 +108,7 @@ export default function CoursesManager() {
               className="border-b border-gray-100 transition-colors duration-200 last:border-b-0 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40"
             >
               <div
-                className={`grid grid-cols-2 items-center gap-x-4 gap-y-2 px-4 py-4 sm:px-5 ${cols}`}
+                className={`grid grid-cols-2 items-center gap-x-3 gap-y-2 px-3 py-3 sm:px-5 sm:py-4 ${cols}`}
               >
                 <div className="col-span-2 md:col-span-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-zinc-50">
@@ -135,10 +135,10 @@ export default function CoursesManager() {
                     students
                   </span>
                 </p>
-                <p className="text-sm text-gray-500 dark:text-zinc-400">
+                <p className="text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
                   {c.date || "—"}
                 </p>
-                <div className="flex items-center justify-end gap-1 md:w-16">
+                <div className="col-span-2 flex items-center justify-end gap-1 md:col-span-1 md:w-16">
                   <Link
                     href={`/courses/${c.id}`}
                     aria-label="Preview course"
@@ -169,20 +169,20 @@ export default function CoursesManager() {
                     transition={{duration: 0.2}}
                     className="overflow-hidden"
                   >
-                    <div className="mx-4 mb-4 flex flex-col gap-3 rounded-lg border border-red-200 p-3 dark:border-red-500/30 sm:mx-5 sm:flex-row sm:items-center sm:justify-between">
-                      <p className="text-sm text-red-600 dark:text-red-400">
+                    <div className="mx-3 mb-3 flex flex-col gap-3 rounded-lg border border-red-200 p-3 dark:border-red-500/30 sm:mx-5 sm:mb-4 sm:flex-row sm:items-center sm:justify-between">
+                      <p className="text-xs text-red-600 dark:text-red-400 sm:text-sm">
                         This course will be hidden from all students. Remove it?
                       </p>
                       <div className="flex gap-2">
                         <button
                           onClick={() => setConfirmId(null)}
-                          className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 active:scale-95 dark:border-zinc-700 dark:text-zinc-300"
+                          className="flex-1 cursor-pointer rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 active:scale-95 dark:border-zinc-700 dark:text-zinc-300 sm:flex-none sm:text-sm"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => removeCourse(c.id)}
-                          className="cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-all duration-200 hover:bg-red-700 active:scale-95"
+                          className="flex-1 cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:bg-red-700 active:scale-95 sm:flex-none sm:text-sm"
                         >
                           Remove
                         </button>
@@ -196,7 +196,7 @@ export default function CoursesManager() {
         </AnimatePresence>
 
         {list.length === 0 && (
-          <p className="px-5 py-10 text-center text-sm text-gray-500 dark:text-zinc-400">
+          <p className="px-5 py-10 text-center text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
             No courses found
           </p>
         )}

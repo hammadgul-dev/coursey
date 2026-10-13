@@ -47,15 +47,15 @@ export default function AdminPage() {
   ] as any[]
 
   return (
-    <div className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:py-10">
+    <div className="mx-auto w-full max-w-7xl overflow-x-hidden px-4 py-6 sm:px-6 lg:py-10">
       <div className="grid gap-6 lg:grid-cols-[220px_1fr] lg:gap-8">
-        <aside className="fade-up lg:sticky lg:top-24 lg:self-start">
-          <nav className="flex gap-2 overflow-x-auto pb-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:pb-0">
+        <aside className="fade-up min-w-0 lg:sticky lg:top-24 lg:self-start">
+          <nav className="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-900 lg:flex-col lg:gap-1 lg:overflow-visible">
             {nav.map((n) => (
               <a
                 key={n.href}
                 href={n.href}
-                className="flex shrink-0 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-xl border border-gray-200 px-3.5 py-2 text-sm font-medium text-gray-600 transition-all duration-200 hover:border-indigo-500 hover:bg-indigo-50 hover:text-indigo-600 dark:border-zinc-800 dark:text-zinc-400 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 lg:border-transparent"
+                className="flex shrink-0 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-600 dark:text-zinc-400 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 lg:border lg:border-transparent lg:text-sm"
               >
                 <n.icon size={16} />
                 {n.label}
@@ -69,42 +69,42 @@ export default function AdminPage() {
           </nav>
         </aside>
 
-        <div className="min-w-0 space-y-12">
+        <div className="min-w-0 space-y-10 sm:space-y-12">
           <section id="overview" className="scroll-mt-24">
             <div className="fade-up">
-              <h1 className="text-2xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50 sm:text-3xl">
+              <h1 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50 sm:text-3xl">
                 Admin Overview
               </h1>
-              <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
                 Review submissions and manage courses and users.
               </p>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-6 sm:gap-4 xl:grid-cols-4">
               {stats.map((s, i) => (
                 <div
                   key={s.label}
                   style={{animationDelay: `${i * 70}ms`}}
-                  className="fade-up cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-colors duration-200 hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 sm:p-5"
+                  className="fade-up min-w-0 cursor-pointer rounded-xl border border-gray-200 bg-white p-3 transition-colors duration-200 hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400 sm:text-[11px]">
                       {s.label}
                     </p>
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-lg ${
+                      className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg sm:h-8 sm:w-8 ${
                         s.accent
                           ? "bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400"
                           : "bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400"
                       }`}
                     >
-                      <s.icon size={16} />
+                      <s.icon size={14} />
                     </span>
                   </div>
-                  <p className="mt-3 text-3xl font-semibold text-gray-900 dark:text-zinc-50">
+                  <p className="mt-2 text-xl font-semibold text-gray-900 dark:text-zinc-50 sm:text-2xl">
                     {s.value}
                   </p>
-                  <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400">
+                  <p className="mt-1 text-[11px] text-gray-500 dark:text-zinc-400 sm:text-xs">
                     {s.hint}
                   </p>
                 </div>
@@ -112,12 +112,12 @@ export default function AdminPage() {
             </div>
           </section>
 
-          <section id="review" className="scroll-mt-24">
-            <div className="fade-up mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <section id="review" className="min-w-0 scroll-mt-24">
+            <div className="fade-up mb-3 sm:mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 sm:text-xl">
                 Pending Review
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
                 Approve to publish, or reject with a reason the instructor will
                 see.
               </p>
@@ -125,24 +125,24 @@ export default function AdminPage() {
             <ReviewQueue />
           </section>
 
-          <section id="courses" className="scroll-mt-24">
-            <div className="fade-up mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <section id="courses" className="min-w-0 scroll-mt-24">
+            <div className="fade-up mb-3 sm:mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 sm:text-xl">
                 All Courses
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
                 Published, rejected and removed courses.
               </p>
             </div>
             <CoursesManager />
           </section>
 
-          <section id="users" className="scroll-mt-24">
-            <div className="fade-up mb-4">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+          <section id="users" className="min-w-0 scroll-mt-24">
+            <div className="fade-up mb-3 sm:mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-zinc-50 sm:text-xl">
                 Users
               </h2>
-              <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+              <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
                 Ban or remove accounts when needed.
               </p>
             </div>
