@@ -2,6 +2,7 @@ import type {Metadata} from "next"
 import {Poppins} from "next/font/google"
 import "./globals.css"
 import {Toaster} from "react-hot-toast"
+import ThemeInit from "@/components/layout/ThemeInit"
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -17,21 +18,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({children}: {children: React.ReactNode}) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                var theme = localStorage.getItem('theme');
-                if (theme === 'light') return;
-                document.documentElement.classList.add('dark');
-              })();
-            `,
-          }}
-        />
-      </head>
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${poppins.variable} font-sans antialiased`}>
+        <ThemeInit />
         {children}
         <Toaster
           position="top-center"
