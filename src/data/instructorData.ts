@@ -2,7 +2,7 @@ import {
   LayoutDashboard,
   BookOpen,
   PlusSquare,
-  Settings,
+  UserCog,
   Library,
   Users,
   Clock,
@@ -19,8 +19,18 @@ export let sidebarLinks = [
     active: true,
   },
   {label: "My Courses", href: "#my-courses", icon: BookOpen, active: false},
-  {label: "Create Course", href: "#", icon: PlusSquare, active: false},
-  {label: "Profile / Settings", href: "#", icon: Settings, active: false},
+  {
+    label: "Create Course",
+    href: "/instructor-dashboard/create-course",
+    icon: PlusSquare,
+    active: false,
+  },
+  {
+    label: "Profile",
+    href: "/profile?role=instructor",
+    icon: UserCog,
+    active: false,
+  },
 ]
 
 export let stats = [
