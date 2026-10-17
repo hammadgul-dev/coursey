@@ -6,6 +6,7 @@ import toast from "react-hot-toast"
 import {ChevronDown, ImagePlus, Plus, X} from "lucide-react"
 import {categories, levels} from "@/data/courseEditor"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
+import Curriculum from "@/components/instructor-dashboard/Curriculum"
 
 let inputCls =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-600"
@@ -337,8 +338,11 @@ export default function CourseEditor({course}: any) {
           </div>
         </div>
       </motion.section>
-
       <AiOutline onApply={applyOutline} />
+      <Curriculum
+        modules={form?.modules}
+        onChange={(m: any) => setField("modules", m)}
+      />
     </div>
   )
 }
