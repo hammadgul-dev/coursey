@@ -68,3 +68,38 @@ export let getEditorCourse = (id: any) => {
   let found = (editorCourses as any)[id]
   return {...emptyCourse, ...(found || {})} as any
 }
+
+export let dummyOutline = [
+  {
+    title: "Type-Level Foundations",
+    lessons: [
+      "Conditional Types & Distributive Inference",
+      "Template Literal Synthesizers",
+      "Recursive Tuple Manipulations",
+    ],
+  },
+  {
+    title: "Distributed RPC Primitives",
+    lessons: [
+      "Type-Safe Message Envelope Protocols",
+      "Vector Clocks & Lamport Timestamps",
+      "Connection Fault Simulation",
+    ],
+  },
+  {
+    title: "Raft Consensus Engine",
+    lessons: [
+      "Leader Election State Machine",
+      "Log Append & Commit Index Consensus",
+      "Safety Invariants & Partition Recovery",
+    ],
+  },
+  {
+    title: "Production Hardening",
+    lessons: [
+      "Snapshotting & Compaction Mechanisms",
+      "Chaos Testing & Jepsen Simulation",
+      "Deterministic Replay Benchmarks",
+    ],
+  },
+]
