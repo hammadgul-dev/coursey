@@ -1,8 +1,10 @@
+import Link from "next/link"
 import {
   BookOpen,
   CheckCircle2,
   ClipboardCheck,
   LayoutDashboard,
+  UserCog,
   Users,
 } from "lucide-react"
 import ReviewQueue from "@/components/admin-dashboard/ReviewQueue"
@@ -15,6 +17,7 @@ let nav = [
   {label: "Pending Review", href: "#review", icon: ClipboardCheck},
   {label: "All Courses", href: "#courses", icon: BookOpen},
   {label: "Users", href: "#users", icon: Users},
+  {label: "Profile", href: "/profile?role=admin", icon: UserCog},
 ]
 
 export default function AdminPage() {
@@ -52,7 +55,7 @@ export default function AdminPage() {
         <aside className="fade-up min-w-0 lg:sticky lg:top-24 lg:self-start">
           <nav className="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-900 lg:flex-col lg:gap-1 lg:overflow-visible">
             {nav.map((n) => (
-              <a
+              <Link
                 key={n.href}
                 href={n.href}
                 className="flex shrink-0 cursor-pointer items-center gap-2.5 whitespace-nowrap rounded-lg px-3 py-2 text-xs font-medium text-gray-600 transition-all duration-200 hover:bg-indigo-50 hover:text-indigo-600 dark:text-zinc-400 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400 lg:border lg:border-transparent lg:text-sm"
@@ -64,7 +67,7 @@ export default function AdminPage() {
                     {adminPending.length}
                   </span>
                 )}
-              </a>
+              </Link>
             ))}
           </nav>
         </aside>
