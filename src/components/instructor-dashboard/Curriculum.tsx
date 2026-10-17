@@ -13,9 +13,20 @@ import {
   Link2,
   List,
   Plus,
+  ListChecks,
   Trash2,
   X,
 } from "lucide-react"
+
+let cpInput =
+  "w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm outline-none transition-all placeholder:text-gray-400 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-600"
+
+let emptyCheckpoint = () => ({
+  question: "",
+  options: ["", "", "", ""],
+  correct: 0,
+  explanation: "",
+})
 
 let iconBtn =
   "cursor-pointer rounded-lg p-1.5 text-gray-400 transition-all hover:bg-gray-100 hover:text-indigo-600 active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-indigo-400"
@@ -97,6 +108,26 @@ export default function Curriculum({modules, onChange}: any) {
     })
     toast.success("Lesson removed")
   }
+
+  let addCheckpoint = (mid: string, lid: string) => {
+    patchLesson(mid, lid, {checkpoint: emptyCheckpoint()})
+    toast.success("Checkpoint added")
+  }
+
+  let removeCheckpoint = (mid: string, lid: string) => {
+    patchLesson(mid, lid, {checkpoint: null})
+    toast.success("Checkpoint removed")
+  }
+
+  let patchCheckpoint = (mid: string, lid: string, l: any, patch: any) =>
+    patchLesson(mid, lid, {checkpoint: {...(l?.checkpoint || {}), ...patch}})
+
+  let setOption = (mid: string, lid: string, l: any, oi: number, val: string) =>
+    patchCheckpoint(mid, lid, l, {
+      options: (l?.checkpoint?.options || []).map((o: string, i: number) =>
+        i === oi ? val : o,
+      ),
+    })
 
   let applyFormat = (mid: string, lid: string, tool: any) => {
     let ta = document.getElementById(`ta-${lid}`) as any
@@ -382,6 +413,183 @@ export default function Curriculum({modules, onChange}: any) {
                                           placeholder="Write the lesson in markdown..."
                                           className="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-sm outline-none transition-all placeholder:text-gray-400 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-600"
                                         />
+
+                                        <div className="mt-3">
+                                          <AnimatePresence
+                                            mode="wait"
+                                            initial={false}
+                                          >
+                                            {l?.checkpoint ? (
+                                              <motion.div
+                                                key="cp"
+                                                initial={{opacity: 0, y: 8}}
+                                                animate={{opacity: 1, y: 0}}
+                                                exit={{opacity: 0, y: -8}}
+                                                transition={{duration: 0.2}}
+                                                className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/40 p-3 dark:border-indigo-500/20 dark:bg-indigo-500/5"
+                                              >
+                                                <div className="flex items-center justify-between gap-2">
+                                                  <p className="flex items-center gap-2 text-sm font-semibold">
+                                                    <ListChecks className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                                                    Checkpoint quiz {mi + 1}.
+                                                    {li + 1}
+                                                  </p>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      removeCheckpoint(
+                                                        m?.id,
+                                                        l?.id,
+                                                      )
+                                                    }
+                                                    className="cursor-pointer rounded-lg px-2 py-1 text-xs font-medium text-rose-600 transition-all hover:bg-rose-50 active:scale-95 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                                                  >
+                                                    Delete checkpoint
+                                                  </button>
+                                                </div>
+
+                                                <div>
+                                                  <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                                    Question
+                                                  </label>
+                                                  <input
+                                                    value={
+                                                      l?.checkpoint?.question ||
+                                                      ""
+                                                    }
+                                                    maxLength={200}
+                                                    onChange={(e) =>
+                                                      patchCheckpoint(
+                                                        m?.id,
+                                                        l?.id,
+                                                        l,
+                                                        {
+                                                          question:
+                                                            e.target.value,
+                                                        },
+                                                      )
+                                                    }
+                                                    placeholder="Ask a question about this lesson"
+                                                    className={cpInput}
+                                                  />
+                                                </div>
+
+                                                <div>
+                                                  <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                                    Options (select the correct
+                                                    one)
+                                                  </label>
+                                                  <div className="space-y-2">
+                                                    {(
+                                                      l?.checkpoint?.options ||
+                                                      []
+                                                    ).map(
+                                                      (
+                                                        o: string,
+                                                        oi: number,
+                                                      ) => {
+                                                        let isCorrect =
+                                                          l?.checkpoint
+                                                            ?.correct === oi
+                                                        return (
+                                                          <div
+                                                            key={oi}
+                                                            className="flex items-center gap-2"
+                                                          >
+                                                            <input
+                                                              type="radio"
+                                                              name={`cp-${l?.id}`}
+                                                              checked={
+                                                                isCorrect
+                                                              }
+                                                              onChange={() =>
+                                                                patchCheckpoint(
+                                                                  m?.id,
+                                                                  l?.id,
+                                                                  l,
+                                                                  {correct: oi},
+                                                                )
+                                                              }
+                                                              className="h-4 w-4 shrink-0 cursor-pointer accent-indigo-600"
+                                                            />
+                                                            <input
+                                                              value={o || ""}
+                                                              maxLength={120}
+                                                              onChange={(e) =>
+                                                                setOption(
+                                                                  m?.id,
+                                                                  l?.id,
+                                                                  l,
+                                                                  oi,
+                                                                  e.target
+                                                                    .value,
+                                                                )
+                                                              }
+                                                              placeholder={`Option ${oi + 1}`}
+                                                              className={`${cpInput} ${isCorrect ? "!border-emerald-500" : ""}`}
+                                                            />
+                                                            <span
+                                                              className={`hidden w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wider text-emerald-600 transition-opacity dark:text-emerald-400 sm:block ${
+                                                                isCorrect
+                                                                  ? "opacity-100"
+                                                                  : "opacity-0"
+                                                              }`}
+                                                            >
+                                                              Correct
+                                                            </span>
+                                                          </div>
+                                                        )
+                                                      },
+                                                    )}
+                                                  </div>
+                                                </div>
+
+                                                <div>
+                                                  <label className="mb-1 block text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                                    Explanation (optional)
+                                                  </label>
+                                                  <textarea
+                                                    value={
+                                                      l?.checkpoint
+                                                        ?.explanation || ""
+                                                    }
+                                                    maxLength={300}
+                                                    rows={3}
+                                                    onChange={(e) =>
+                                                      patchCheckpoint(
+                                                        m?.id,
+                                                        l?.id,
+                                                        l,
+                                                        {
+                                                          explanation:
+                                                            e.target.value,
+                                                        },
+                                                      )
+                                                    }
+                                                    placeholder="Why is this the right answer?"
+                                                    className={`${cpInput} resize-none`}
+                                                  />
+                                                </div>
+                                              </motion.div>
+                                            ) : (
+                                              <motion.button
+                                                key="add"
+                                                type="button"
+                                                initial={{opacity: 0}}
+                                                animate={{opacity: 1}}
+                                                exit={{opacity: 0}}
+                                                transition={{duration: 0.15}}
+                                                onClick={() =>
+                                                  addCheckpoint(m?.id, l?.id)
+                                                }
+                                                className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-indigo-400"
+                                              >
+                                                <ListChecks className="h-4 w-4" />
+                                                Add checkpoint
+                                              </motion.button>
+                                            )}
+                                          </AnimatePresence>
+                                        </div>
                                       </div>
                                     </motion.div>
                                   )}
