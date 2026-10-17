@@ -7,7 +7,7 @@ import {
   continueLearning,
   myCourses,
   watchlist,
-} from "@/data/dashboardData"
+} from "@/data/studentData"
 import MyCourses from "@/components/student-dashboard/MyCourses"
 import Watchlist from "@/components/student-dashboard/Watchlist"
 
