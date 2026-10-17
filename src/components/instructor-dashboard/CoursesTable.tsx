@@ -5,6 +5,7 @@ import Link from "next/link"
 import toast from "react-hot-toast"
 import {motion, AnimatePresence} from "framer-motion"
 import {AlertCircle, Eye, Pencil, Search, SearchX, Send} from "lucide-react"
+import {useRouter} from "next/navigation"
 
 let statusMap: Record<string, {label: string; cls: string; dot: string}> = {
   published: {
@@ -44,6 +45,7 @@ export default function CoursesTable({courses}: {courses: any[]}) {
   let [list, setList] = useState(courses)
   let [tab, setTab] = useState("all")
   let [q, setQ] = useState("")
+  let router = useRouter()
 
   useEffect(() => {
     setList(courses)
@@ -59,6 +61,14 @@ export default function CoursesTable({courses}: {courses: any[]}) {
       (tab === "all" || course.status === tab) &&
       (course.title ?? "").toLowerCase().includes(q.trim().toLowerCase()),
   )
+
+  let editCourse = (c: any) => {
+    if (c?.status === "pending" || c?.status === "published") {
+      toast.error("Only draft or rejected courses can be edited")
+      return
+    }
+    router.push(`/instructor-dashboard/create-course?id=${c?.id}`)
+  }
 
   let submit = (course: any) => {
     setList((previous: any[]) =>
@@ -177,7 +187,6 @@ export default function CoursesTable({courses}: {courses: any[]}) {
                     className="min-w-0 border-b border-gray-200 transition-colors last:border-b-0 hover:bg-gray-50 dark:border-zinc-800 dark:hover:bg-zinc-800/40"
                   >
                     <div className={`${cols} px-5 py-4`}>
-                      {/* Course details */}
                       <div className="flex min-w-0 items-center gap-3">
                         <span
                           className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-xs font-bold sm:h-11 sm:w-11 ${
@@ -235,9 +244,7 @@ export default function CoursesTable({courses}: {courses: any[]}) {
 
                         <button
                           type="button"
-                          onClick={() =>
-                            toast("Course editor will be available soon")
-                          }
+                          onClick={() => editCourse(course)}
                           aria-label="Edit course"
                           title="Edit"
                           className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-indigo-500 hover:text-indigo-600 dark:border-zinc-700 dark:text-gray-400 dark:hover:text-indigo-400"
