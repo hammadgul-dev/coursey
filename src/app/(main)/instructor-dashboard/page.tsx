@@ -55,7 +55,7 @@ export default function InstructorDashboardPage() {
             </div>
 
             <Link
-              href="#"
+              href="/instructor-dashboard/create-course"
               className="group inline-flex w-fit shrink-0 cursor-pointer items-center justify-center gap-2 self-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-indigo-700 active:bg-indigo-800 sm:self-start lg:self-auto"
             >
               <Plus className="h-4 w-4 transition-transform duration-200 group-hover:rotate-90" />
