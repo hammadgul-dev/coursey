@@ -12,21 +12,21 @@ export default function Navbar() {
   const links = [
     {href: "/courses", label: "Browse Courses"},
     {href: "/about", label: "About"},
-    {href: "/why", label: "Why Coursey"},
+    {href: "/why-coursey", label: "Why Coursey"},
     {href: "/how-it-works", label: "How It Works"},
   ]
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur border-b border-border mx-auto">
       <div className="px-4 md:px-6 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-2 group shrink-0">
+        <Link href="/" className="flex items-center gap-2 group shrink-0">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center text-white cursor-pointer transition-transform duration-200 group-hover:scale-105 group-hover:shadow-md group-hover:shadow-primary/30">
             <GraduationCap className="w-4 h-4" />
           </div>
           <span className="cursor-pointer font-semibold transition-colors duration-200 group-hover:text-primary">
             Coursey
           </span>
-        </div>
+        </Link>
 
         <div className="hidden md:flex items-center gap-8 text-sm text-text-secondary">
           {links.map((link) => (
