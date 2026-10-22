@@ -6,3 +6,173 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+enum Role {
+  STUDENT
+  INSTRUCTOR
+  ADMIN
+}
+
+enum CourseStatus {
+  DRAFT
+  PENDING
+  PUBLISHED
+  REJECTED
+  REMOVED
+}
+
+enum Level {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(STUDENT)
+  headline     String?
+  bio          String?
+  avatar       String?
+  banned       Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  courses     Course[]
+  enrollments Enrollment[]
+  progress    LessonProgress[]
+  watchlist   Watchlist[]
+  reviews     Review[]
+
+  @@index([role])
+}
+
+model Course {
+  id              String       @id @default(cuid())
+  title           String
+  description     String       @default("")
+  category        String       @default("")
+  level           Level        @default(BEGINNER)
+  cover           String?
+  learn           String[]
+  status          CourseStatus @default(DRAFT)
+  rejectionReason String?
+  submittedAt     DateTime?
+  publishedAt     DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  instructorId    String
+  instructor      User         @relation(fields: [instructorId], references: [id], onDelete: Cascade)
+
+  modules      Module[]
+  enrollments  Enrollment[]
+  watchlist    Watchlist[]
+  reviews      Review[]
+  adminReviews AdminReview[]
+
+  @@index([status])
+  @@index([category])
+  @@index([instructorId])
+}
+
+model Module {
+  id       String   @id @default(cuid())
+  title    String
+  position Int
+  courseId String
+  course   Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  lessons  Lesson[]
+
+  @@index([courseId])
+}
+
+model Lesson {
+  id          String   @id @default(cuid())
+  title       String
+  content     String   @default("")
+  readMinutes Int      @default(5)
+  position    Int
+  isFree      Boolean  @default(false)
+  moduleId    String
+  module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+
+  checkpoints Checkpoint[]
+  progress    LessonProgress[]
+
+  @@index([moduleId])
+}
+
+model Checkpoint {
+  id       String @id @default(cuid())
+  question String
+  answer   String
+  position Int    @default(0)
+  lessonId String
+  lesson   Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@index([lessonId])
+}
+
+model Enrollment {
+  id          String    @id @default(cuid())
+  userId      String
+  courseId    String
+  grade       Int?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model LessonProgress {
+  id          String   @id @default(cuid())
+  userId      String
+  lessonId    String
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@index([userId, completedAt])
+}
+
+model Watchlist {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  courseId  String
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, courseId])
+  @@index([courseId])
+}
+
+model AdminReview {
+  id        String   @id @default(cuid())
+  courseId  String
+  aiScore   Int?
+  aiNote    String?
+  createdAt DateTime @default(now())
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@index([courseId])
+}
