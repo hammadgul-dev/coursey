@@ -2,6 +2,7 @@ import {NextResponse} from "next/server"
 import bcrypt from "bcryptjs"
 import {prisma} from "@/lib/prisma"
 import {signupSchema} from "@/validations/auth"
+import {hasMailServer} from "@/lib/email"
 
 export async function POST(req: Request) {
   try {
@@ -16,6 +17,14 @@ export async function POST(req: Request) {
     }
 
     let {name, email, password, role} = parsed.data as any
+
+    let validDomain = await hasMailServer(email)
+    if (!validDomain) {
+      return NextResponse.json(
+        {error: "Enter A Valid Email Address"},
+        {status: 400},
+      )
+    }
 
     let exists = await prisma.user.findUnique({where: {email}})
     if (exists) {
