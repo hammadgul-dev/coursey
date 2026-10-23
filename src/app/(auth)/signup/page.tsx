@@ -114,7 +114,7 @@ export default function SignupPage() {
     }
 
     if (!form.agree) {
-      toast.error("Please Accept The Terms And Privacy Policy")
+      toast.error("Please Accept The Terms And Privacy")
       return
     }
 
