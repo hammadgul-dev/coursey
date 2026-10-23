@@ -4,6 +4,14 @@ import Link from "next/link"
 import toast from "react-hot-toast"
 import {motion} from "framer-motion"
 import {Eye, EyeOff, GraduationCap} from "lucide-react"
+import {useRouter} from "next/navigation"
+import {signIn, getSession} from "next-auth/react"
+
+let dashboards: Record<string, string> = {
+  STUDENT: "/student-dashboard",
+  INSTRUCTOR: "/instructor-dashboard",
+  ADMIN: "/admin-dashboard",
+}
 
 let container = {hidden: {}, show: {transition: {staggerChildren: 0.06}}}
 let item = {
@@ -69,6 +77,8 @@ function GoogleIcon() {
 }
 
 export default function LoginPage() {
+  let router = useRouter()
+  let [loading, setLoading] = useState(false)
   let [form, setForm] = useState<any>({
     email: "",
     password: "",
@@ -77,9 +87,46 @@ export default function LoginPage() {
 
   let set = (k: string, v: any) => setForm({...form, [k]: v})
 
-  let submit = (ev: any) => {
+  let submit = async (ev: any) => {
     ev.preventDefault()
-    toast.success("Logged in")
+    if (loading) return
+
+    let email = (form.email || "").trim().toLowerCase()
+    let password = form.password || ""
+
+    if (!email || !password) {
+      toast.error("Email And Password Are Required")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      let res = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (res?.error) {
+        let msg =
+          res.error === "CredentialsSignin"
+            ? "Invalid Email Or Password"
+            : res.error || "Something Went Wrong"
+        toast.error(msg)
+        setLoading(false)
+        return
+      }
+
+      let session = await getSession()
+      let role = (session?.user as any)?.role || ""
+      toast.success("Logged In")
+      router.replace(dashboards[role] || "/login")
+      router.refresh()
+    } catch {
+      toast.error("Something Went Wrong")
+      setLoading(false)
+    }
   }
 
   return (
@@ -175,9 +222,10 @@ export default function LoginPage() {
           variants={item}
           whileTap={{scale: 0.98}}
           type="submit"
-          className="h-10 w-full cursor-pointer rounded-xl bg-[#4F46E5] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md hover:shadow-[#4F46E5]/30"
+          disabled={loading}
+          className="h-10 w-full cursor-pointer rounded-xl bg-[#4F46E5] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md hover:shadow-[#4F46E5]/30 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Log In
+          {loading ? "Logging In..." : "Log In"}
         </motion.button>
 
         <motion.div
