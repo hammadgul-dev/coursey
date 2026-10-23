@@ -4,6 +4,14 @@ import Link from "next/link"
 import toast from "react-hot-toast"
 import {motion} from "framer-motion"
 import {Check, Eye, EyeOff, GraduationCap, PencilLine} from "lucide-react"
+import {useRouter} from "next/navigation"
+import {signIn, getSession} from "next-auth/react"
+
+let dashboards: Record<string, string> = {
+  STUDENT: "/student-dashboard",
+  INSTRUCTOR: "/instructor-dashboard",
+  ADMIN: "/admin-dashboard",
+}
 
 let roles = [
   {id: "student", label: "Student", icon: GraduationCap},
@@ -63,17 +71,19 @@ function GoogleIcon() {
       />
       <path
         fill="#FBBC05"
-        d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.100 0 24s.9 7.600 2.600 10.800l7.900-6.100z"
+        d="M10.5 28.7c-.5-1.5-.8-3-.8-4.7s.3-3.2.8-4.7l-7.9-6.1C.9 16.4 0 20.1 0 24s.9 7.6 2.6 10.8l7.9-6.1z"
       />
       <path
         fill="#34A853"
-        d="M24 48c6.5 0 11.900-2.100 15.900-5.800l-7.500-5.800c-2.100 1.400-4.800 2.300-8.400 2.300-6.300 0-11.600-4.100-13.500-9.800l-7.900 6.100C6.500 42.600 14.600 48 24 48z"
+        d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.8 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"
       />
     </svg>
   )
 }
 
 export default function SignupPage() {
+  let router = useRouter()
+  let [loading, setLoading] = useState(false)
   let [form, setForm] = useState<any>({
     role: "student",
     name: "",
@@ -85,9 +95,72 @@ export default function SignupPage() {
 
   let set = (k: string, v: any) => setForm({...form, [k]: v})
 
-  let submit = (ev: any) => {
+  let submit = async (ev: any) => {
     ev.preventDefault()
-    toast.success("Account created")
+    if (loading) return
+
+    let name = (form.name || "").trim()
+    let email = (form.email || "").trim().toLowerCase()
+    let password = form.password || ""
+
+    if (!name || !email || !password) {
+      toast.error("All Fields Are Required")
+      return
+    }
+
+    if (password !== form.confirm) {
+      toast.error("Passwords Do Not Match")
+      return
+    }
+
+    if (!form.agree) {
+      toast.error("Please Accept The Terms And Privacy Policy")
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      let res = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          role: (form.role || "student").toUpperCase(),
+        }),
+      })
+
+      let data = await res.json().catch(() => ({}))
+
+      if (!res.ok) {
+        toast.error(data?.error || "Something Went Wrong")
+        setLoading(false)
+        return
+      }
+
+      let login = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      })
+
+      if (login?.error) {
+        toast.success("Account Created, Please Log In")
+        router.replace("/login")
+        return
+      }
+
+      let session = await getSession()
+      let role = (session?.user as any)?.role || ""
+      toast.success("Account Created")
+      router.replace(dashboards[role] || "/login")
+      router.refresh()
+    } catch {
+      toast.error("Something Went Wrong")
+      setLoading(false)
+    }
   }
 
   return (
@@ -226,9 +299,10 @@ export default function SignupPage() {
           variants={item}
           whileTap={{scale: 0.98}}
           type="submit"
-          className="h-10 w-full cursor-pointer rounded-xl bg-[#4F46E5] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md hover:shadow-[#4F46E5]/30"
+          disabled={loading}
+          className="h-10 w-full cursor-pointer rounded-xl bg-[#4F46E5] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md hover:shadow-[#4F46E5]/30 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          Sign Up
+          {loading ? "Creating Account..." : "Sign Up"}
         </motion.button>
 
         <motion.div
