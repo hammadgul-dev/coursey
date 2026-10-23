@@ -31,7 +31,12 @@ export default function RootLayout({children}: {children: React.ReactNode}) {
               color: "var(--card-foreground)",
               border: "1px solid var(--border)",
               fontFamily: "var(--font-poppins)",
-              fontSize: "15px",
+              fontSize: "14px",
+              padding: "10px 14px",
+              borderRadius: "10px",
+              maxWidth: "calc(100vw - 32px)",
+              textAlign: "center",
+              lineHeight: "1.4",
               boxShadow: "0 8px 15px rgba(0, 0, 0, 0.12)",
             },
           }}
