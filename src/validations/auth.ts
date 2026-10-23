@@ -1,4 +1,5 @@
 import {z} from "zod"
+import {emailSchema} from "@/validations/email"
 
 export let signupSchema = z.object({
   name: z
@@ -6,7 +7,7 @@ export let signupSchema = z.object({
     .trim()
     .min(2, "Name Must Be At Least 2 Characters")
     .max(60, "Name Is Too Long"),
-  email: z.string().trim().toLowerCase().email("Enter A Valid Email"),
+  email: emailSchema,
   password: z
     .string()
     .min(8, "Password Must Be At Least 8 Characters")
