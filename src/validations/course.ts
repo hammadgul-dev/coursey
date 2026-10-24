@@ -102,6 +102,24 @@ export let rejectSchema = z.object({
     .max(500, "Reason Is Too Long"),
 })
 
+export let courseIdBodySchema = z.object({
+  courseId: idSchema,
+})
+
+export let reviewSchema = z.object({
+  rating: z.coerce
+    .number()
+    .int("Rating Must Be A Whole Number")
+    .min(1, "Rating Must Be At Least 1")
+    .max(5, "Rating Must Be At Most 5"),
+  comment: z
+    .string()
+    .trim()
+    .max(1000, "Comment Is Too Long")
+    .optional()
+    .or(z.literal("")),
+})
+
 export let courseQuerySchema = z.object({
   search: z.string().trim().max(100, "Search Is Too Long").optional(),
   category: z.string().trim().max(50, "Category Is Too Long").optional(),
