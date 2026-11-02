@@ -18,3 +18,14 @@ export let profileSchema = z.strictObject({
     .max(500, "Bio Must Be At Most 500 Characters")
     .optional(),
 })
+
+export let passwordSchema = z.strictObject({
+  currentPassword: z
+    .string()
+    .min(1, "Current Password Is Required")
+    .max(72, "Invalid Password"),
+  newPassword: z
+    .string()
+    .min(8, "Password Must Be At Least 8 Characters")
+    .max(72, "Password Must Be At Most 72 Characters"),
+})
