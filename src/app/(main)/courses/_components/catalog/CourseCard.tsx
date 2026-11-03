@@ -1,7 +1,6 @@
 import Link from "next/link"
 import {motion} from "framer-motion"
 import {Star, BookOpen} from "lucide-react"
-import type {Course} from "../_data/courses"
 
 let palette: any = {
   indigo:
@@ -16,13 +15,27 @@ let palette: any = {
   rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/15",
 }
 
-let levelCls: any = {
-  Beginner: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-  Intermediate: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  Advanced: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+let colorKeys = Object.keys(palette)
+
+let levelLabels: any = {
+  BEGINNER: "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED: "Advanced",
 }
 
-export default function CourseCard({c, i}: {c: Course; i: number}) {
+let levelCls: any = {
+  BEGINNER: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  INTERMEDIATE: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  ADVANCED: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+}
+
+function colorFor(text: string) {
+  let sum = 0
+  for (let ch of text || "") sum += ch.charCodeAt(0)
+  return palette[colorKeys[sum % colorKeys.length]]
+}
+
+export default function CourseCard({c, i}: {c: any; i: number}) {
   return (
     <motion.div
       initial={{opacity: 0, y: 12}}
@@ -31,33 +44,34 @@ export default function CourseCard({c, i}: {c: Course; i: number}) {
       className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-all duration-200 hover:border-[#4F46E5]/50 hover:shadow-md hover:shadow-[#4F46E5]/5"
     >
       <div
-        className={`flex items-center justify-between border-b px-4 py-2.5 text-xs font-semibold ${palette[c.color]}`}
+        className={`flex items-center justify-between border-b px-4 py-2.5 text-xs font-semibold ${colorFor(c?.category || "")}`}
       >
-        <span>{c.tag}</span>
+        <span>{c?.category || "General"}</span>
         <span className="flex items-center gap-1">
-          <Star size={12} className="fill-current" /> {c.rating}
+          <Star size={12} className="fill-current" />
+          {c?.reviewsCount > 0 ? c.rating : "New"}
         </span>
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h3 className="mb-1.5 line-clamp-2 text-base font-semibold transition-colors duration-200 group-hover:text-[#4F46E5]">
-          {c.title}
+          {c?.title}
         </h3>
         <p className="mb-3 line-clamp-2 text-sm text-muted-foreground">
-          {c.desc}
+          {c?.description}
         </p>
-        <p className="mb-3 text-sm font-medium">{c.author}</p>
+        <p className="mb-3 text-sm font-medium">{c?.instructor?.name || ""}</p>
         <div className="mb-3 flex items-center justify-between text-xs text-muted-foreground">
           <span className="flex items-center gap-1">
-            <BookOpen size={13} /> {c.lessons} lessons
+            <BookOpen size={13} /> {c?.lessonsCount || 0} lessons
           </span>
           <span
-            className={`rounded-md px-2 py-0.5 font-medium ${levelCls[c.level]}`}
+            className={`rounded-md px-2 py-0.5 font-medium ${levelCls[c?.level] || ""}`}
           >
-            {c.level}
+            {levelLabels[c?.level] || ""}
           </span>
         </div>
         <Link
-          href={`/courses/${c.id}`}
+          href={`/courses/${c?.id}`}
           className="mt-auto flex h-9 w-full cursor-pointer items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-medium text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md hover:shadow-[#4F46E5]/30"
         >
           Start Reading
