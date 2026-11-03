@@ -40,8 +40,7 @@ function CheckBox({checked, onChange, label, count}: any) {
 export default function FilterSidebar({
   categories,
   levels,
-  readingTimeOptions,
-  features,
+  onReset,
   activeCats,
   activeLevel,
   toggleCat,
@@ -51,7 +50,11 @@ export default function FilterSidebar({
     <aside className="hidden lg:block">
       <div className="mb-5 flex items-center justify-between">
         <h4 className="text-sm font-semibold">Filter By</h4>
-        <button className="cursor-pointer text-xs font-medium text-[#4F46E5] hover:underline">
+        <button
+          type="button"
+          onClick={onReset}
+          className="cursor-pointer text-xs font-medium text-[#4F46E5] hover:underline"
+        >
           Reset
         </button>
       </div>
@@ -90,29 +93,7 @@ export default function FilterSidebar({
         ))}
       </div>
 
-      <p className="mb-2 text-xs font-semibold text-muted-foreground">
-        ESTIMATED READING TIME
-      </p>
-      <div className="mb-5">
-        {readingTimeOptions.map((r: any) => (
-          <CheckBox
-            key={r.label}
-            label={r.label}
-            count={r.count}
-            checked={false}
-            onChange={() => {}}
-          />
-        ))}
-      </div>
-
-      <p className="mb-2 text-xs font-semibold text-muted-foreground">
-        COURSE FEATURES
-      </p>
-      <div className="mb-6">
-        {features.map((f: string) => (
-          <CheckBox key={f} label={f} checked={false} onChange={() => {}} />
-        ))}
-      </div>
+      <div className="mb-6" />
 
       <div className="rounded-xl border border-[#4F46E5]/20 bg-[#4F46E5]/5 p-4">
         <p className="mb-1.5 flex items-center gap-1.5 text-sm font-semibold text-[#4F46E5]">
