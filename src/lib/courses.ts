@@ -237,3 +237,16 @@ export async function getCourseDetail(id: string, userId?: string | null) {
     isEnrolled: enrolled,
   }
 }
+
+export async function getCategories() {
+  let rows: any = []
+  rows = await prisma.course.groupBy({
+    by: ["category"],
+    where: {status: "PUBLISHED"},
+    orderBy: {category: "asc"},
+    _count: {_all: true},
+  })
+  return rows
+    .filter((r: any) => r?.category)
+    .map((r: any) => ({label: r.category, count: r?._count?._all || 0}))
+}
