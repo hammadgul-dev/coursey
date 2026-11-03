@@ -1,69 +1,84 @@
 "use client"
-import {useMemo, useState} from "react"
+import {useEffect, useState} from "react"
+import {useRouter, useSearchParams} from "next/navigation"
 import SearchBar from "./SearchBar"
 import FilterSidebar from "./FilterSidebar"
 import ActiveFilters from "./ActiveFilters"
 import CourseGrid from "./CourseGrid"
 import Pagination from "./Pagination"
-import type {Course} from "@/data/courses"
 
-let PAGE_SIZE = 9
+let levelLabels: any = {
+  BEGINNER: "Beginner",
+  INTERMEDIATE: "Intermediate",
+  ADVANCED: "Advanced",
+}
 
 export default function CoursesExplorer({
   courses,
+  total,
+  page,
+  totalPages,
+  pageSize,
   categories,
   levels,
-  readingTimeOptions,
-  features,
+  initialQuery,
+  cat,
+  level,
 }: any) {
-  let [activeCats, setActiveCats] = useState<string[]>(["Web Development"])
-  let [activeLevel, setActiveLevel] = useState("Intermediate")
-  let [query, setQuery] = useState("")
+  let router = useRouter()
+  let searchParams = useSearchParams()
+  let [query, setQuery] = useState<string>(initialQuery || "")
   let [view, setView] = useState("grid")
-  let [page, setPage] = useState(1)
+
+  let activeCats: string[] = cat ? [cat] : []
+  let activeLevel: string = levelLabels[level] || "All Levels"
+
+  let update = (changes: any) => {
+    let p = new URLSearchParams(searchParams?.toString() || "")
+    for (let key of Object.keys(changes)) {
+      let value = changes[key]
+      if (value) p.set(key, value)
+      else p.delete(key)
+    }
+    let qs = p.toString()
+    router.push(qs ? `/courses?${qs}` : "/courses", {scroll: false})
+  }
+
+  useEffect(() => {
+    if (query.trim() === (initialQuery || "")) return
+    let t = setTimeout(() => {
+      update({q: query.trim(), page: ""})
+    }, 400)
+    return () => clearTimeout(t)
+  }, [query])
 
   let toggleCat = (label: string) => {
-    setPage(1)
-    if (label === "All Topics") return setActiveCats([])
-    setActiveCats((prev) =>
-      prev.includes(label) ? prev.filter((c) => c !== label) : [...prev, label],
-    )
+    if (label === "All Topics" || label === cat) {
+      update({cat: "", page: ""})
+      return
+    }
+    update({cat: label, page: ""})
   }
 
   let changeLevel = (label: string) => {
-    setPage(1)
-    setActiveLevel(label)
+    let value = label === "All Levels" ? "" : label.toUpperCase()
+    update({level: value, page: ""})
   }
 
   let clearAll = () => {
-    setActiveCats([])
-    setActiveLevel("All Levels")
-    setPage(1)
+    update({cat: "", level: "", page: ""})
   }
 
-  let filtered = useMemo(() => {
-    return courses.filter((c: Course) => {
-      let matchQuery =
-        query.trim() === "" ||
-        c.title.toLowerCase().includes(query.toLowerCase()) ||
-        c.author.toLowerCase().includes(query.toLowerCase())
-      let matchLevel = activeLevel === "All Levels" || c.level === activeLevel
-      return matchQuery && matchLevel
-    })
-  }, [courses, query, activeLevel])
-
-  let totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
-  let paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+  let changePage = (n: number) => {
+    update({page: n > 1 ? String(n) : ""})
+  }
 
   return (
     <>
       <SearchBar
         query={query}
-        onChange={(v: string) => {
-          setQuery(v)
-          setPage(1)
-        }}
-        count={filtered.length}
+        onChange={(v: string) => setQuery(v)}
+        count={total}
       />
 
       <ActiveFilters
@@ -78,22 +93,21 @@ export default function CoursesExplorer({
         <FilterSidebar
           categories={categories}
           levels={levels}
-          readingTimeOptions={readingTimeOptions}
-          features={features}
           activeCats={activeCats}
           activeLevel={activeLevel}
           toggleCat={toggleCat}
           setActiveLevel={changeLevel}
+          onReset={clearAll}
         />
 
         <div>
-          <CourseGrid courses={paginated} />
+          <CourseGrid courses={courses} />
           <Pagination
             page={page}
             totalPages={totalPages}
-            onChange={setPage}
-            totalItems={filtered.length}
-            pageSize={PAGE_SIZE}
+            onChange={changePage}
+            totalItems={total}
+            pageSize={pageSize}
           />
         </div>
       </div>
