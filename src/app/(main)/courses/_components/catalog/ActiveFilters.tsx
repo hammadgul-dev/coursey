@@ -8,12 +8,19 @@ export default function ActiveFilters({
   setActiveLevel,
   clearAll,
 }: any) {
-  if (activeCats.length === 0 && activeLevel === "All Levels") return null
+  let cats: string[] = activeCats || []
+  let hasLevel = !!activeLevel && activeLevel !== "All Levels"
+  let levelLabel = hasLevel
+    ? String(activeLevel).charAt(0).toUpperCase() +
+      String(activeLevel).slice(1).toLowerCase()
+    : ""
+
+  if (cats.length === 0 && !hasLevel) return null
 
   return (
     <div className="mb-6 flex flex-wrap items-center gap-2 animate-in fade-in duration-200">
       <span className="text-xs font-medium text-muted-foreground">ACTIVE:</span>
-      {activeCats.map((c: string) => (
+      {cats.map((c: string) => (
         <span
           key={c}
           className="flex items-center gap-1.5 rounded-md bg-[#4F46E5]/10 px-2.5 py-1 text-xs font-medium text-[#4F46E5]"
@@ -26,9 +33,9 @@ export default function ActiveFilters({
           />
         </span>
       ))}
-      {activeLevel !== "All Levels" && (
+      {hasLevel && (
         <span className="flex items-center gap-1.5 rounded-md bg-[#4F46E5]/10 px-2.5 py-1 text-xs font-medium text-[#4F46E5]">
-          {activeLevel}
+          {levelLabel}
           <X
             size={12}
             className="cursor-pointer"
@@ -40,7 +47,7 @@ export default function ActiveFilters({
         onClick={clearAll}
         className="flex cursor-pointer items-center gap-1 text-xs font-medium text-[#4F46E5] hover:underline"
       >
-        <RotateCcw size={11} /> Clear all filters
+        <RotateCcw size={11} /> Clear All Filters
       </button>
     </div>
   )
