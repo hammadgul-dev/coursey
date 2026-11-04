@@ -5,17 +5,16 @@ import {Check, Link2} from "lucide-react"
 import EnrollButtons from "./EnrollButtons"
 
 let includes = [
-  "High-density text lessons",
-  "Instant inline AI tutor",
-  "Interactive code checkpoints",
-  "Certificate of completion",
-  "Lifetime access & updates",
+  "High-Density Text Lessons",
+  "Instant Inline AI Tutor",
+  "Interactive Code Checkpoints",
+  "Lifetime Access & Updates",
 ]
 
-export default function EnrollCard({lessons}: any) {
+export default function EnrollCard({lessons, enroll}: any) {
   let copy = () => {
     navigator.clipboard.writeText(window.location.href)
-    toast.success("Link copied")
+    toast.success("Link Copied")
   }
 
   return (
@@ -24,7 +23,7 @@ export default function EnrollCard({lessons}: any) {
       <p className="mb-5 mt-1 text-xs text-gray-500 dark:text-gray-400">
         100% free forever, no credit card
       </p>
-      <EnrollButtons stacked />
+      <EnrollButtons stacked enroll={enroll} />
       <div className="my-2 border-t border-gray-100 dark:border-gray-800" />
       <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
         This course includes
@@ -32,7 +31,7 @@ export default function EnrollCard({lessons}: any) {
       <ul className="space-y-2.5">
         <li className="flex items-center gap-2.5 text-sm text-gray-600 dark:text-gray-300">
           <Check size={15} className="text-indigo-600 dark:text-indigo-400" />
-          {lessons} text lessons
+          {lessons || 0} Text Lessons
         </li>
         {includes.map((x) => (
           <li
