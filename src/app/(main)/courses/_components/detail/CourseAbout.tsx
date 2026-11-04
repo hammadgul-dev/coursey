@@ -1,24 +1,37 @@
 import {BookOpen, EyeOff, ListChecks} from "lucide-react"
 import Reveal from "@/components/ui/Reveal"
-import {highlights} from "@/data/courseDetail"
 
-let icons = [BookOpen, EyeOff, ListChecks]
+let highlights = [
+  {
+    title: "Text-First Lessons",
+    desc: "Dense, well written lessons you can scan and revisit.",
+    icon: BookOpen,
+  },
+  {
+    title: "No Distractions",
+    desc: "No video fluff, just focused reading at your own pace.",
+    icon: EyeOff,
+  },
+  {
+    title: "Checkpoints",
+    desc: "Quick questions after lessons to test what you learned.",
+    icon: ListChecks,
+  },
+]
 
 export default function CourseAbout({course}: any) {
   return (
     <Reveal>
       <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-        About this course
+        About This Course
       </h2>
-      <p className="mt-4 leading-relaxed text-sm text-justify text-gray-600 dark:text-gray-300">
-        Most video courses force you into a passive viewing pace. {course.title}{" "}
-        takes an uncompromising text-first approach: every concept is laid out
-        in high-density, rigorously written lessons you can scan, search and
-        revisit at your own speed.
+      <p className="mt-4 whitespace-pre-line text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+        {course?.description ||
+          "The instructor has not added a description yet."}
       </p>
       <div className="mt-6 grid gap-4 sm:grid-cols-3">
-        {highlights.map((h, i) => {
-          let Icon = icons[i]
+        {highlights.map((h) => {
+          let Icon = h.icon
           return (
             <div
               key={h.title}
