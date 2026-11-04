@@ -2,24 +2,73 @@
 
 import {useState} from "react"
 import Link from "next/link"
+import {useRouter} from "next/navigation"
 import toast from "react-hot-toast"
 import {motion, AnimatePresence} from "framer-motion"
-import {ArrowRight, Bookmark, BookOpen} from "lucide-react"
+import {Bookmark, BookOpen} from "lucide-react"
 
 export default function Watchlist({items}: any) {
-  let [list, setList] = useState(items)
+  let [list, setList] = useState<any[]>(items || [])
+  let [busyId, setBusyId] = useState("")
+  let router = useRouter()
 
   let remove = (id: string) =>
-    setList((p: any) => p.filter((i: any) => i.id !== id))
+    setList((p: any[]) => p.filter((i: any) => i.id !== id))
 
-  let onRemove = (id: string) => {
-    remove(id)
-    toast.success("Removed from watchlist")
+  let removeFromWatchlist = async (id: string) => {
+    let res = await fetch("/api/student/watchlist", {
+      method: "DELETE",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({courseId: id}),
+    })
+    let data = await res.json().catch(() => null)
+    return {ok: res.ok, error: data?.error || "Something Went Wrong"}
   }
 
-  let onEnroll = (id: string) => {
-    remove(id)
-    toast.success("Enrolled successfully")
+  let onRemove = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
+    try {
+      let r = await removeFromWatchlist(id)
+      if (!r.ok) {
+        toast.error(r.error)
+        return
+      }
+      remove(id)
+      toast.success("Removed From Watchlist")
+      router.refresh()
+    } catch {
+      toast.error("Something Went Wrong")
+    } finally {
+      setBusyId("")
+    }
+  }
+
+  let onEnroll = async (id: string) => {
+    if (busyId) return
+    setBusyId(id)
+    try {
+      let res = await fetch("/api/student/enroll", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({courseId: id}),
+      })
+      let data = await res.json().catch(() => null)
+      if (!res.ok && res.status !== 409) {
+        toast.error(data?.error || "Something Went Wrong")
+        return
+      }
+      await removeFromWatchlist(id).catch(() => null)
+      remove(id)
+      toast.success(
+        res.status === 409 ? "Already Enrolled" : "Enrolled Successfully",
+      )
+      router.refresh()
+    } catch {
+      toast.error("Something Went Wrong")
+    } finally {
+      setBusyId("")
+    }
   }
 
   return (
@@ -37,7 +86,7 @@ export default function Watchlist({items}: any) {
             Watchlist ({list.length})
           </h2>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Courses saved for future reading sessions
+            Courses Saved For Future Reading Sessions
           </p>
         </div>
       </div>
@@ -64,11 +113,12 @@ export default function Watchlist({items}: any) {
               >
                 <div className="flex items-center justify-between gap-2 rounded-lg bg-indigo-50 px-2 py-1.5 dark:bg-indigo-500/10">
                   <span className="text-[11px] font-semibold text-indigo-700 dark:text-indigo-300">
-                    {w.tag}
+                    {w.tag || "Course"}
                   </span>
                   <button
                     onClick={() => onRemove(w.id)}
-                    className="cursor-pointer text-indigo-600 transition-transform hover:scale-110 dark:text-indigo-400"
+                    disabled={!!busyId}
+                    className="cursor-pointer text-indigo-600 transition-transform hover:scale-110 disabled:opacity-50 dark:text-indigo-400"
                   >
                     <Bookmark className="h-4 w-4 fill-current" />
                   </button>
@@ -86,18 +136,21 @@ export default function Watchlist({items}: any) {
                 <div className="mt-auto flex items-center justify-between pt-4 text-xs text-gray-500 dark:text-gray-400">
                   <span className="flex items-center gap-1.5">
                     <BookOpen className="h-3.5 w-3.5" />
-                    {w.lessons} lessons
+                    {w.lessons} Lessons
                   </span>
-                  <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] dark:bg-zinc-800">
-                    {w.level}
-                  </span>
+                  {w.level && (
+                    <span className="rounded-md bg-gray-100 px-2 py-0.5 text-[11px] dark:bg-zinc-800">
+                      {w.level}
+                    </span>
+                  )}
                 </div>
 
                 <button
                   onClick={() => onEnroll(w.id)}
-                  className="mt-3 cursor-pointer rounded-lg border border-gray-200 bg-white py-2 text-sm font-medium text-gray-800 transition-colors hover:border-indigo-500 hover:text-indigo-600 dark:border-zinc-800 dark:bg-zinc-900 dark:text-gray-200 dark:hover:text-indigo-400"
+                  disabled={!!busyId}
+                  className="mt-3 cursor-pointer rounded-lg border border-gray-200 bg-white py-2 text-sm font-medium text-gray-800 transition-colors hover:border-indigo-500 hover:text-indigo-600 disabled:opacity-50 dark:border-zinc-800 dark:bg-zinc-900 dark:text-gray-200 dark:hover:text-indigo-400"
                 >
-                  Enroll Free
+                  {busyId === w.id ? "Please Wait..." : "Enroll Free"}
                 </button>
               </motion.article>
             ))}
