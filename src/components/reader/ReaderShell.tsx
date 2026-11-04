@@ -4,35 +4,31 @@ import {createContext, useContext, useState} from "react"
 import Link from "next/link"
 import {AnimatePresence, motion} from "framer-motion"
 import toast from "react-hot-toast"
-import {
-  ArrowLeft,
-  CheckCircle2,
-  Circle,
-  Lock,
-  Menu,
-  ShieldCheck,
-  X,
-} from "lucide-react"
-import {allLessons, doneInitial, modules} from "@/data/lessonData"
+import {ArrowLeft, CheckCircle2, Circle, Lock, Menu, X} from "lucide-react"
 import ThemeToggle from "@/components/layout/ThemeToggle"
 
 let Ctx = createContext<any>(null)
 
 export function CompleteButton({lessonId}: any) {
-  let {done, toggle} = useContext(Ctx)
+  let {done, markDone, busy} = useContext(Ctx)
   let isDone = done.includes(lessonId)
 
   return (
     <button
-      onClick={() => toggle(lessonId)}
-      className={`flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-auto ${
+      onClick={() => markDone(lessonId)}
+      disabled={isDone || busy}
+      className={`flex w-full items-center justify-center gap-2 rounded-lg px-5 py-2.5 text-sm font-semibold transition-all duration-200 sm:w-auto ${
         isDone
-          ? "border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 dark:border-indigo-500/50 dark:bg-gray-900 dark:text-indigo-300 dark:hover:bg-indigo-500/10"
-          : "bg-indigo-600 text-white hover:bg-indigo-700 active:bg-indigo-800"
+          ? "cursor-default border border-indigo-300 bg-white text-indigo-600 dark:border-indigo-500/50 dark:bg-gray-900 dark:text-indigo-300"
+          : "cursor-pointer bg-indigo-600 text-white hover:bg-indigo-700 active:scale-[0.98] active:bg-indigo-800"
       }`}
     >
       <CheckCircle2 size={16} />
-      {isDone ? "Completed" : "Mark Lesson as Complete"}
+      {isDone
+        ? "Completed"
+        : busy
+          ? "Please Wait..."
+          : "Mark Lesson As Complete"}
     </button>
   )
 }
@@ -41,41 +37,75 @@ export default function ReaderShell({
   courseId,
   courseTitle,
   lessonId,
+  modules,
+  doneIds,
+  canTrack,
   children,
 }: any) {
-  let [done, setDone] = useState<number[]>(doneInitial)
+  let list: any[] = modules || []
+  let [done, setDone] = useState<string[]>(doneIds || [])
   let [open, setOpen] = useState(false)
-  let pct = Math.round((done.length / allLessons.length) * 100)
+  let [busy, setBusy] = useState(false)
 
-  let toggle = (id: number) => {
-    let has = done.includes(id)
-    setDone(has ? done.filter((x) => x !== id) : [...done, id])
-    toast.success(has ? "Marked as incomplete" : "Lesson completed")
+  let total = 0
+  for (let m of list) total += m?.lessons?.length || 0
+  let pct = total > 0 ? Math.round((done.length / total) * 100) : 0
+
+  let markDone = async (id: string) => {
+    if (!canTrack || busy || done.includes(id)) return
+    setBusy(true)
+    try {
+      let res = await fetch(`/api/student/lessons/${id}/progress`, {
+        method: "POST",
+      })
+      let data = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(data?.error || "Something Went Wrong")
+        return
+      }
+      setDone((prev) => (prev.includes(id) ? prev : [...prev, id]))
+      toast.success(
+        data?.courseCompleted ? "Course Completed" : "Lesson Completed",
+      )
+    } catch {
+      toast.error("Something Went Wrong")
+    } finally {
+      setBusy(false)
+    }
   }
 
-  let list = (
+  let offsets: number[] = []
+  let running = 0
+  for (let m of list) {
+    offsets.push(running)
+    running += m?.lessons?.length || 0
+  }
+
+  let sidebar = (
     <div className="flex h-full flex-col">
       <div className="border-b border-gray-200 p-4 dark:border-gray-800">
         <p className="text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-          Course syllabus
+          Course Syllabus
         </p>
         <div className="mt-1 flex items-center justify-between gap-2">
           <p className="truncate text-sm font-semibold text-gray-900 dark:text-white">
             {courseTitle}
           </p>
-          <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
-            {done.length}/{allLessons.length}
-          </span>
+          {canTrack && (
+            <span className="shrink-0 rounded-md bg-indigo-50 px-2 py-0.5 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+              {done.length}/{total}
+            </span>
+          )}
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto p-3">
-        {modules.map((m, i) => (
-          <div key={m.title} className="mb-4">
+        {list.map((m: any, i: number) => (
+          <div key={m.id} className="mb-4">
             <p className="px-2 pb-1.5 text-[11px] font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              0{i + 1} {m.title}
+              {String(i + 1).padStart(2, "0")} {m.title}
             </p>
-            {m.lessons.map((l: any) => {
+            {(m.lessons || []).map((l: any, j: number) => {
               let active = l.id === lessonId
               let isDone = done.includes(l.id)
               let row =
@@ -97,9 +127,11 @@ export default function ReaderShell({
                 <>
                   {icon}
                   <span className="flex-1 truncate">
-                    {l.id}. {l.t}
+                    {offsets[i] + j + 1}. {l.title}
                   </span>
-                  <span className="text-xs text-gray-400">{l.m}m</span>
+                  <span className="text-xs text-gray-400">
+                    {l.readMinutes || 0}m
+                  </span>
                 </>
               )
 
@@ -135,7 +167,7 @@ export default function ReaderShell({
   )
 
   return (
-    <Ctx.Provider value={{done, toggle}}>
+    <Ctx.Provider value={{done, markDone, busy}}>
       <div className="min-h-screen bg-white text-gray-800 transition-colors duration-300 dark:bg-gray-950 dark:text-gray-100">
         <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-gray-200 bg-white px-4 dark:border-gray-800 dark:bg-gray-950">
           <button
@@ -155,22 +187,26 @@ export default function ReaderShell({
             <span className="truncate">{courseTitle}</span>
           </Link>
           <div className="ml-auto flex items-center gap-3">
-            <span className="hidden text-xs font-semibold text-gray-500 dark:text-gray-400 sm:block">
-              {pct}%
-            </span>
+            {canTrack && (
+              <span className="hidden text-xs font-semibold text-gray-500 dark:text-gray-400 sm:block">
+                {pct}%
+              </span>
+            )}
             <ThemeToggle />
           </div>
-          <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gray-200 dark:bg-gray-800">
-            <motion.div
-              className="h-full rounded-r-full bg-indigo-600"
-              animate={{width: `${pct}%`}}
-              transition={{duration: 0.6, ease: "easeOut"}}
-            />
-          </div>
+          {canTrack && (
+            <div className="absolute inset-x-0 bottom-0 h-[3px] bg-gray-200 dark:bg-gray-800">
+              <motion.div
+                className="h-full rounded-r-full bg-indigo-600"
+                animate={{width: `${pct}%`}}
+                transition={{duration: 0.6, ease: "easeOut"}}
+              />
+            </div>
+          )}
         </header>
 
         <aside className="fixed bottom-0 left-0 top-14 z-20 hidden w-72 border-r border-gray-200 bg-gray-50/60 dark:border-gray-800 dark:bg-gray-900/40 lg:block">
-          {list}
+          {sidebar}
         </aside>
 
         <AnimatePresence>
@@ -196,7 +232,7 @@ export default function ReaderShell({
                 >
                   <X size={18} />
                 </button>
-                {list}
+                {sidebar}
               </motion.aside>
             </div>
           )}
