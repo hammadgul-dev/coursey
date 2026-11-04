@@ -3,8 +3,12 @@ import {ArrowLeft, BookOpen, Star, Users} from "lucide-react"
 import Reveal from "@/components/ui/Reveal"
 import EnrollButtons from "./EnrollButtons"
 
-export default function CourseHero({course, lessons}: any) {
-  console.log(course)
+export default function CourseHero({course, lessons, enroll}: any) {
+  let level = String(course?.level || "")
+  let levelLabel = level
+    ? level.charAt(0).toUpperCase() + level.slice(1).toLowerCase()
+    : ""
+
   return (
     <section className="border-b border-gray-200 bg-indigo-50/60 dark:border-gray-800 dark:bg-indigo-950/20">
       <div className="mx-auto max-w-[1200px] px-4 py-8 sm:px-6 sm:py-12">
@@ -17,52 +21,61 @@ export default function CourseHero({course, lessons}: any) {
               size={14}
               className="transition-transform duration-200 group-hover:-translate-x-1"
             />
-            Back to courses
+            Back To Courses
           </Link>
 
           <div className="mb-4 flex flex-wrap gap-2">
-            <span className="rounded-md bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
-              {course.category ?? "Development"}
-            </span>
-            <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
-              {course.level ?? "Beginner"}
-            </span>
+            {course?.category && (
+              <span className="rounded-md bg-indigo-100 px-2 py-1 text-xs font-semibold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">
+                {course.category}
+              </span>
+            )}
+            {levelLabel && (
+              <span className="rounded-md bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-600 dark:bg-gray-800 dark:text-gray-300">
+                {levelLabel}
+              </span>
+            )}
           </div>
 
           <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-3xl lg:text-4xl">
-            {course.title}
+            {course?.title || ""}
           </h1>
           <p className="mt-4 text-sm leading-relaxed text-gray-600 dark:text-gray-300 sm:text-base">
-            {course.desc ??
-              "A text-first deep dive built for focused readers. No video fluff, just high-density lessons with interactive checkpoints."}
+            {course?.description ||
+              "A text-first course built for focused readers."}
           </p>
 
           <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-gray-600 dark:text-gray-300">
             <span className="font-medium text-gray-900 dark:text-white">
-              {course.author ?? "Sarah Jenkins"}
+              {course?.instructor?.name || ""}
             </span>
             <span className="flex items-center gap-1.5">
               <BookOpen
                 size={15}
                 className="text-indigo-600 dark:text-indigo-400"
               />
-              {lessons} lessons
+              {lessons || 0} lessons
             </span>
             <span className="flex items-center gap-1.5">
               <Users
                 size={15}
                 className="text-indigo-600 dark:text-indigo-400"
               />
-              {course.students ?? "14,820"} enrolled
+              {course?.studentsCount || 0} enrolled
             </span>
             <span className="flex items-center gap-1.5">
               <Star size={15} className="fill-amber-400 text-amber-400" />
-              {course.rating ?? "4.9"}
+              {course?.rating > 0 ? course.rating : "New"}
+              {course?.reviewsCount > 0 && (
+                <span className="text-xs text-gray-500 dark:text-gray-400">
+                  ({course.reviewsCount})
+                </span>
+              )}
             </span>
           </div>
 
           <div className="mt-8 lg:hidden">
-            <EnrollButtons courseId={course.id} />
+            <EnrollButtons enroll={enroll} />
           </div>
         </Reveal>
       </div>
