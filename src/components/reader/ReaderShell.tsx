@@ -1,11 +1,12 @@
 "use client"
 
-import {createContext, useContext, useState} from "react"
+import {createContext, useContext, useEffect, useState} from "react"
 import Link from "next/link"
 import {AnimatePresence, motion} from "framer-motion"
 import toast from "react-hot-toast"
 import {ArrowLeft, CheckCircle2, Circle, Lock, Menu, X} from "lucide-react"
 import ThemeToggle from "@/components/layout/ThemeToggle"
+import {fireConfetti, stopConfetti} from "@/lib/confetti"
 
 let Ctx = createContext<any>(null)
 
@@ -47,6 +48,10 @@ export default function ReaderShell({
   let [open, setOpen] = useState(false)
   let [busy, setBusy] = useState(false)
 
+  useEffect(() => {
+    return () => stopConfetti()
+  }, [])
+
   let total = 0
   for (let m of list) total += m?.lessons?.length || 0
   let pct = total > 0 ? Math.round((done.length / total) * 100) : 0
@@ -64,6 +69,7 @@ export default function ReaderShell({
         return
       }
       setDone((prev) => (prev.includes(id) ? prev : [...prev, id]))
+      if (data?.courseCompleted) fireConfetti()
       toast.success(
         data?.courseCompleted ? "Course Completed" : "Lesson Completed",
       )
