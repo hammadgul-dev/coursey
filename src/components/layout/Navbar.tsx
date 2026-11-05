@@ -6,8 +6,33 @@ import {GraduationCap, Menu, X} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import ThemeToggle from "./ThemeToggle"
 
-export default function Navbar() {
+function UserAvatar({user}: {user: any}) {
+  let initial = (user?.name || "U").charAt(0).toUpperCase()
+  return (
+    <Link
+      href="/profile"
+      aria-label="Profile Settings"
+      title="Profile Settings"
+      className="block cursor-pointer rounded-full transition-all duration-200 hover:ring-2 hover:ring-primary/50 active:scale-95"
+    >
+      {user?.avatar ? (
+        <img
+          src={user.avatar}
+          alt={user?.name || "User"}
+          className="h-9 w-9 rounded-full object-cover"
+        />
+      ) : (
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-white">
+          {initial}
+        </div>
+      )}
+    </Link>
+  )
+}
+
+export default function Navbar({user}: {user?: any}) {
   let [open, setOpen] = useState(false)
+  let loggedIn = !!user
 
   const links = [
     {href: "/courses", label: "Browse Courses"},
@@ -42,27 +67,34 @@ export default function Navbar() {
 
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
-          <Link href="/login">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="transition-colors duration-200 hover:bg-accent hover:text-primary"
-            >
-              Log In
-            </Button>
-          </Link>
-          <Link href="/signup">
-            <Button
-              size="sm"
-              className="bg-primary hover:bg-primary-hover transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:-translate-y-0.5"
-            >
-              Sign Up
-            </Button>
-          </Link>
+          {loggedIn ? (
+            <UserAvatar user={user} />
+          ) : (
+            <>
+              <Link href="/login">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="transition-colors duration-200 hover:bg-accent hover:text-primary"
+                >
+                  Log In
+                </Button>
+              </Link>
+              <Link href="/signup">
+                <Button
+                  size="sm"
+                  className="bg-primary hover:bg-primary-hover transition-all duration-200 hover:shadow-md hover:shadow-primary/30 hover:-translate-y-0.5"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
 
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggle />
+          {loggedIn && <UserAvatar user={user} />}
           <button
             onClick={() => setOpen(!open)}
             className="cursor-pointer p-2 rounded-md hover:bg-accent transition-colors"
@@ -85,17 +117,31 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <div className="flex gap-3 pt-2 border-t border-border">
-            <Button variant="ghost" size="sm" className="flex-1">
-              Log In
-            </Button>
-            <Button
-              size="sm"
-              className="flex-1 bg-primary hover:bg-primary-hover"
-            >
-              Sign Up
-            </Button>
-          </div>
+          {!loggedIn && (
+            <div className="flex gap-3 pt-2 border-t border-border">
+              <Link
+                href="/login"
+                onClick={() => setOpen(false)}
+                className="flex-1"
+              >
+                <Button variant="ghost" size="sm" className="w-full">
+                  Log In
+                </Button>
+              </Link>
+              <Link
+                href="/signup"
+                onClick={() => setOpen(false)}
+                className="flex-1"
+              >
+                <Button
+                  size="sm"
+                  className="w-full bg-primary hover:bg-primary-hover"
+                >
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
+          )}
         </div>
       )}
     </nav>
