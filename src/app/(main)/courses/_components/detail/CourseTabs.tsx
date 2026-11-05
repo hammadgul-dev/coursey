@@ -8,6 +8,7 @@ let tabs = [
   {id: "learn", label: "What You'll Learn"},
   {id: "curriculum", label: "Curriculum"},
   {id: "instructor", label: "Instructor"},
+  {id: "reviews", label: "Reviews"},
 ]
 
 export default function CourseTabs() {
