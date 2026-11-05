@@ -12,6 +12,8 @@ import InstructorCard from "../_components/detail/InstructorCard"
 import EnrollCard from "../_components/detail/EnrollCard"
 import RelatedCourses from "../_components/detail/RelatedCourses"
 import Reveal from "@/components/ui/Reveal"
+import ReviewsSection from "../_components/detail/ReviewsSection"
+import {getReviewsData} from "@/lib/reviews"
 
 export async function generateMetadata({params}: any) {
   let {id} = await params
@@ -83,7 +85,8 @@ export default async function CourseDetailPage({params}: any) {
   let related = (relatedData?.courses || [])
     .filter((c: any) => c.id !== course.id)
     .slice(0, 3)
-
+  let reviewsData = await getReviewsData(course.id, userId)
+  let canReview = role === "STUDENT" && !!course.isEnrolled
   let enroll = {
     courseId: course.id,
     isEnrolled: !!course.isEnrolled,
@@ -124,6 +127,14 @@ export default async function CourseDetailPage({params}: any) {
 
           <section id="instructor" className="scroll-mt-32 py-10">
             <InstructorCard instructor={course.instructor} />
+          </section>
+
+          <section id="reviews" className="scroll-mt-32 py-10">
+            <ReviewsSection
+              courseId={course.id}
+              canReview={canReview}
+              data={reviewsData}
+            />
           </section>
         </div>
 
