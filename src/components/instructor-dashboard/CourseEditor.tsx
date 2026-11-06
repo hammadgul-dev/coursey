@@ -1,13 +1,14 @@
 "use client"
 
-import {useRef, useState} from "react"
-import {motion, AnimatePresence} from "framer-motion"
+import {useState} from "react"
+import {useRouter} from "next/navigation"
+import {motion} from "framer-motion"
 import toast from "react-hot-toast"
-import {Check, ChevronDown, ImagePlus, Loader2, Plus, X} from "lucide-react"
-import {categories, levels} from "@/data/courseEditor"
+import {Check, ChevronDown, Loader2, Plus, X} from "lucide-react"
+import {categories, levels} from "@/lib/editorOptions"
+import {request} from "@/lib/request"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
 import Curriculum from "@/components/instructor-dashboard/Curriculum"
-import {useRouter} from "next/navigation"
 
 let inputCls =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm outline-none transition-all duration-200 placeholder:text-gray-400 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-600"
@@ -18,162 +19,159 @@ let counterCls = (len: number, max: number) =>
   `text-xs tabular-nums transition-colors ${len >= max ? "text-amber-500" : "text-gray-400 dark:text-zinc-500"}`
 
 export default function CourseEditor({course}: any) {
-  let fileRef = useRef<any>(null)
   let router = useRouter()
+  let courseId: string = course?.id || ""
+
+  let initLearn: string[] = course?.learn || []
+  if (initLearn.length === 0) initLearn = [""]
+
   let [busy, setBusy] = useState("")
-  let [drag, setDrag] = useState(false)
-  let [form, setForm] = useState<any>({
-    title: course?.title || "",
-    description: course?.description || "",
-    category: course?.category || "",
-    level: course?.level || "",
-    learn: course?.learn || [],
-    modules: course?.modules || [],
-    cover: null,
-  })
+  let [title, setTitle] = useState(course?.title || "")
+  let [description, setDescription] = useState(course?.description || "")
+  let [category, setCategory] = useState(course?.category || "")
+  let [level, setLevel] = useState(course?.level || "BEGINNER")
+  let [cover, setCover] = useState(course?.cover || "")
+  let [learn, setLearn] = useState<string[]>(initLearn)
 
-  let setField = (key: string, value: any) =>
-    setForm((prev: any) => ({...prev, [key]: value}))
-
-  let pickFile = (file: any) => {
-    if (!file) return
-    if (!file.type?.startsWith("image/")) {
-      toast.error("Please select an image file")
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be under 2 MB")
-      return
-    }
-    if (form?.cover?.url) URL.revokeObjectURL(form.cover.url)
-    setField("cover", {
-      name: file.name,
-      size: (file.size / 1024 / 1024).toFixed(1),
-      url: URL.createObjectURL(file),
-    })
-  }
-
-  let removeCover = () => {
-    if (form?.cover?.url) URL.revokeObjectURL(form.cover.url)
-    setField("cover", null)
-  }
+  let editLearn = (i: number, text: string) =>
+    setLearn(learn.map((x, k) => (k === i ? text : x)))
 
   let addLearn = () => {
-    if ((form?.learn?.length || 0) >= 8) {
-      toast.error("Maximum 8 takeaways allowed")
+    if (learn.length >= 8) {
+      toast.error("Maximum 8 Takeaways Allowed")
       return
     }
-    setField("learn", [
-      ...(form?.learn || []),
-      {id: `l${Date.now()}${Math.floor(Math.random() * 1000)}`, text: ""},
-    ])
+    setLearn([...learn, ""])
   }
 
-  let editLearn = (id: string, text: string) =>
-    setField(
-      "learn",
-      (form?.learn || []).map((item: any) =>
-        item?.id === id ? {...item, text} : item,
-      ),
-    )
+  let removeLearn = (i: number) => setLearn(learn.filter((_, k) => k !== i))
 
-  let removeLearn = (id: string) =>
-    setField(
-      "learn",
-      (form?.learn || []).filter((item: any) => item?.id !== id),
-    )
-
-  let applyOutline = (outline: any) => {
-    let stamp = Date.now()
-    setField(
-      "modules",
-      (outline || []).map((m: any, mi: number) => ({
-        id: `m${stamp}${mi}`,
-        title: m?.title || "",
-        lessons: (m?.lessons || []).map((t: string, li: number) => ({
-          id: `ls${stamp}${mi}${li}`,
-          title: t,
-          content: "",
-          minutes: "",
-          checkpoint: null,
-        })),
-      })),
-    )
-  }
-
-  let titleLen = form?.title?.length || 0
-  let descLen = form?.description?.length || 0
-  let learnList = form?.learn || []
-  let modList = form?.modules || []
+  let modList = course?.modules || []
   let allLessons = modList.flatMap((m: any) => m?.lessons || [])
-  let checkpointCount = allLessons.filter((l: any) => l?.checkpoint).length
-  let totalMin = allLessons.reduce(
-    (n: number, l: any) => n + (Number(l?.minutes) || 0),
+  let checkpointCount = allLessons.reduce(
+    (n: number, l: any) => n + (l?.checkpoints?.length || 0),
     0,
   )
-  let readTime =
-    totalMin >= 60
-      ? `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`
-      : `${totalMin}m`
+  let totalMin = allLessons.reduce(
+    (n: number, l: any) => n + (Number(l?.readMinutes) || 0),
+    0,
+  )
+  let readTime = `${totalMin}m`
+  if (totalMin >= 60)
+    readTime = `${Math.floor(totalMin / 60)}h ${totalMin % 60}m`
+
+  let learnClean = learn.map((x) => x.trim()).filter(Boolean)
+  let titleLen = title.length
+  let descLen = description.length
 
   let checks = [
-    {label: "Title added", ok: titleLen >= 5},
-    {label: "Description added", ok: descLen >= 20},
+    {label: "Title Added", ok: title.trim().length >= 3},
+    {label: "Description Added", ok: description.trim().length >= 20},
+    {label: "Category Selected", ok: !!category},
+    {label: "At Least 1 Learning Point", ok: learnClean.length > 0},
+    {label: "At Least 1 Module", ok: modList.length > 0},
     {
-      label: "Category and level selected",
-      ok: !!form?.category && !!form?.level,
+      label: "Every Module Has A Lesson",
+      ok:
+        modList.length > 0 &&
+        modList.every((m: any) => (m?.lessons || []).length > 0),
     },
-    {label: "Cover uploaded", ok: !!form?.cover},
-    {label: "At least 1 module", ok: modList.length > 0},
-    {label: "At least 1 lesson", ok: allLessons.length > 0},
     {
-      label: "All lessons have title and content",
+      label: "All Lessons Have Content",
       ok:
         allLessons.length > 0 &&
-        allLessons.every((l: any) => l?.title?.trim() && l?.content?.trim()),
-    },
-    {
-      label: "Checkpoints are complete",
-      ok: allLessons.every(
-        (l: any) =>
-          !l?.checkpoint ||
-          (l.checkpoint?.question?.trim() &&
-            (l.checkpoint?.options || []).every((o: string) => o?.trim())),
-      ),
+        allLessons.every((l: any) => (l?.content || "").trim()),
     },
   ]
   let doneCount = checks.filter((c) => c.ok).length
   let ready = doneCount === checks.length
 
-  let saveDraft = () => {
-    if (titleLen < 5) {
-      toast.error("Add a course title to save the draft")
-      return
+  let saveDetails = async () => {
+    if (title.trim().length < 3) {
+      toast.error("Title Must Be At Least 3 Characters")
+      return ""
     }
-    setBusy("save")
-    setTimeout(() => {
-      setBusy("")
-      toast.success("Draft saved")
-    }, 700)
+    let body: any = {
+      title: title.trim(),
+      level,
+      cover: cover.trim(),
+      learn: learnClean,
+    }
+    if (description.trim()) body.description = description.trim()
+    if (category) body.category = category
+
+    if (courseId) {
+      let res = await request(
+        `/api/instructor/courses/${courseId}`,
+        "PATCH",
+        body,
+      )
+      if (!res.ok) {
+        toast.error(res.error)
+        return ""
+      }
+      return courseId
+    }
+
+    let res = await request("/api/instructor/courses", "POST", body)
+    if (!res.ok) {
+      toast.error(res.error)
+      return ""
+    }
+    let newId = res.data?.id || ""
+    if (!newId) toast.error("Something Went Wrong")
+    return newId
   }
 
-  let submit = () => {
+  let saveDraft = async () => {
+    if (busy) return
+    setBusy("save")
+    let id = await saveDetails()
+    setBusy("")
+    if (!id) return
+    toast.success("Draft Saved")
+    if (!courseId) {
+      router.replace(`/instructor-dashboard/create-course?id=${id}`)
+      return
+    }
+    router.refresh()
+  }
+
+  let submit = async () => {
+    if (busy) return
+    if (!courseId) {
+      toast.error("Save The Draft First")
+      return
+    }
     if (!ready) {
-      toast.error("Complete the readiness checklist first")
+      toast.error("Complete The Readiness Checklist First")
       return
     }
     setBusy("submit")
-    setTimeout(() => {
-      toast.success("Course submitted for review")
-      router.push("/instructor-dashboard")
-    }, 900)
+    let id = await saveDetails()
+    if (!id) {
+      setBusy("")
+      return
+    }
+    let res = await request(
+      `/api/instructor/courses/${courseId}/submit`,
+      "POST",
+    )
+    if (!res.ok) {
+      setBusy("")
+      toast.error(res.error)
+      return
+    }
+    toast.success("Course Submitted For Review")
+    router.push("/instructor-dashboard")
+    router.refresh()
   }
 
   let metrics = [
     {label: "Modules", value: modList.length},
     {label: "Lessons", value: allLessons.length},
     {label: "Checkpoints", value: checkpointCount},
-    {label: "Read time", value: readTime, accent: true},
+    {label: "Read Time", value: readTime, accent: true},
   ]
 
   return (
@@ -198,14 +196,14 @@ export default function CourseEditor({course}: any) {
                 <label className={labelCls}>
                   Course Title <span className="text-rose-500">*</span>
                 </label>
-                <span className={counterCls(titleLen, 80)}>
-                  {titleLen} / 80
+                <span className={counterCls(titleLen, 120)}>
+                  {titleLen} / 120
                 </span>
               </div>
               <input
-                value={form?.title || ""}
-                maxLength={80}
-                onChange={(e) => setField("title", e.target.value)}
+                value={title}
+                maxLength={120}
+                onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Modern TypeScript Architecture"
                 className={inputCls}
               />
@@ -216,15 +214,15 @@ export default function CourseEditor({course}: any) {
                 <label className={labelCls}>
                   Short Description <span className="text-rose-500">*</span>
                 </label>
-                <span className={counterCls(descLen, 300)}>
-                  {descLen} / 300
+                <span className={counterCls(descLen, 2000)}>
+                  {descLen} / 2000
                 </span>
               </div>
               <textarea
-                value={form?.description || ""}
-                maxLength={300}
+                value={description}
+                maxLength={2000}
                 rows={4}
-                onChange={(e) => setField("description", e.target.value)}
+                onChange={(e) => setDescription(e.target.value)}
                 placeholder="What will students learn in this course?"
                 className={`${inputCls} resize-none`}
               />
@@ -237,12 +235,12 @@ export default function CourseEditor({course}: any) {
                 </label>
                 <div className="relative">
                   <select
-                    value={form?.category || ""}
-                    onChange={(e) => setField("category", e.target.value)}
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
                     className={`${inputCls} cursor-pointer appearance-none pr-10`}
                   >
                     <option value="" disabled>
-                      Select category
+                      Select Category
                     </option>
                     {categories.map((c) => (
                       <option key={c} value={c}>
@@ -260,16 +258,13 @@ export default function CourseEditor({course}: any) {
                 </label>
                 <div className="relative">
                   <select
-                    value={form?.level || ""}
-                    onChange={(e) => setField("level", e.target.value)}
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
                     className={`${inputCls} cursor-pointer appearance-none pr-10`}
                   >
-                    <option value="" disabled>
-                      Select level
-                    </option>
                     {levels.map((l) => (
-                      <option key={l} value={l}>
-                        {l}
+                      <option key={l.value} value={l.value}>
+                        {l.label}
                       </option>
                     ))}
                   </select>
@@ -279,151 +274,75 @@ export default function CourseEditor({course}: any) {
             </div>
 
             <div>
-              <label className={labelCls}>Cover Image (16:9)</label>
+              <label className={labelCls}>Cover Image Url (Optional)</label>
               <input
-                ref={fileRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={(e: any) => {
-                  pickFile(e.target.files?.[0])
-                  e.target.value = ""
-                }}
+                value={cover}
+                maxLength={500}
+                onChange={(e) => setCover(e.target.value)}
+                placeholder="https://..."
+                className={inputCls}
               />
-              <AnimatePresence mode="wait" initial={false}>
-                {form?.cover ? (
-                  <motion.div
-                    key="preview"
-                    initial={{opacity: 0, scale: 0.97}}
-                    animate={{opacity: 1, scale: 1}}
-                    exit={{opacity: 0, scale: 0.97}}
-                    transition={{duration: 0.2}}
-                    className="flex flex-col gap-4 rounded-xl border border-gray-200 p-3 transition-colors hover:border-indigo-500 dark:border-zinc-800 sm:flex-row sm:items-center"
-                  >
-                    <img
-                      src={form?.cover?.url}
-                      alt="Cover preview"
-                      className="aspect-video w-full rounded-lg border border-gray-200 object-cover dark:border-zinc-800 sm:w-48"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium">
-                        {form?.cover?.name}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-zinc-400">
-                        {form?.cover?.size} MB
-                      </p>
-                      <div className="mt-3 flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() => fileRef.current?.click()}
-                          className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium transition-all hover:border-indigo-500 active:scale-95 dark:border-zinc-800"
-                        >
-                          Replace
-                        </button>
-                        <button
-                          type="button"
-                          onClick={removeCover}
-                          className="cursor-pointer rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-600 transition-all hover:border-rose-500 active:scale-95 dark:border-rose-500/30 dark:text-rose-400"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ) : (
-                  <motion.button
-                    key="drop"
-                    type="button"
-                    initial={{opacity: 0, scale: 0.97}}
-                    animate={{opacity: 1, scale: drag ? 1.01 : 1}}
-                    exit={{opacity: 0, scale: 0.97}}
-                    transition={{duration: 0.2}}
-                    onClick={() => fileRef.current?.click()}
-                    onDragOver={(e: any) => {
-                      e.preventDefault()
-                      setDrag(true)
-                    }}
-                    onDragLeave={() => setDrag(false)}
-                    onDrop={(e: any) => {
-                      e.preventDefault()
-                      setDrag(false)
-                      pickFile(e.dataTransfer?.files?.[0])
-                    }}
-                    className={`flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-10 text-center transition-colors hover:border-indigo-500 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 ${
-                      drag
-                        ? "border-indigo-500 bg-indigo-50/50 dark:bg-indigo-500/5"
-                        : "border-gray-300 dark:border-zinc-700"
-                    }`}
-                  >
-                    <ImagePlus className="h-6 w-6 text-indigo-500" />
-                    <span className="text-sm font-medium">
-                      Click or drag an image here
-                    </span>
-                    <span className="text-xs text-gray-500 dark:text-zinc-400">
-                      PNG, JPG or WEBP, up to 2 MB
-                    </span>
-                  </motion.button>
-                )}
-              </AnimatePresence>
+              {cover.trim().startsWith("http") && (
+                <img
+                  src={cover.trim()}
+                  alt="Cover preview"
+                  className="mt-3 aspect-video w-full rounded-lg border border-gray-200 object-cover dark:border-zinc-800 sm:w-64"
+                />
+              )}
             </div>
 
             <div>
               <div className="flex items-center justify-between">
                 <label className={labelCls}>What You&apos;ll Learn</label>
-                <span className={counterCls(learnList.length, 8)}>
-                  {learnList.length} / 8
+                <span className={counterCls(learn.length, 8)}>
+                  {learn.length} / 8
                 </span>
               </div>
-              <AnimatePresence initial={false}>
-                {learnList.map((item: any, i: number) => (
-                  <motion.div
-                    key={item?.id}
-                    initial={{height: 0, opacity: 0}}
-                    animate={{height: "auto", opacity: 1}}
-                    exit={{height: 0, opacity: 0}}
-                    transition={{duration: 0.2}}
-                    className="overflow-hidden"
+              {learn.map((item, i) => (
+                <div key={i} className="flex items-center gap-2 pb-2">
+                  <span className="w-5 shrink-0 text-right text-xs text-gray-400 dark:text-zinc-500">
+                    {i + 1}.
+                  </span>
+                  <input
+                    value={item}
+                    maxLength={200}
+                    onChange={(e) => editLearn(i, e.target.value)}
+                    placeholder="A key takeaway students will gain"
+                    className={inputCls}
+                  />
+                  <button
+                    type="button"
+                    disabled={learn.length <= 1}
+                    onClick={() => removeLearn(i)}
+                    className="cursor-pointer rounded-lg p-2 text-gray-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-rose-500/10"
                   >
-                    <div className="flex items-center gap-2 pb-2">
-                      <span className="w-5 shrink-0 text-right text-xs text-gray-400 dark:text-zinc-500">
-                        {i + 1}.
-                      </span>
-                      <input
-                        value={item?.text || ""}
-                        onChange={(e) => editLearn(item?.id, e.target.value)}
-                        placeholder="A key takeaway students will gain"
-                        className={inputCls}
-                      />
-                      <button
-                        type="button"
-                        disabled={learnList.length <= 1}
-                        onClick={() => removeLearn(item?.id)}
-                        className="cursor-pointer rounded-lg p-2 text-gray-400 transition-all hover:bg-rose-50 hover:text-rose-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-rose-500/10"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
               <button
                 type="button"
                 onClick={addLearn}
                 className="mt-1 flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium transition-all hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-800 dark:hover:text-indigo-400"
               >
                 <Plus className="h-4 w-4" />
-                Add item
+                Add Item
               </button>
             </div>
           </div>
         </motion.section>
 
-        <AiOutline onApply={applyOutline} />
+        <AiOutline />
 
-        <Curriculum
-          modules={form?.modules}
-          onChange={(m: any) => setField("modules", m)}
-        />
+        {courseId && <Curriculum courseId={courseId} modules={modList} />}
+        {!courseId && (
+          <section className="rounded-xl border-2 border-dashed border-gray-300 px-4 py-10 text-center dark:border-zinc-700">
+            <h2 className="text-lg font-semibold">3. Curriculum</h2>
+            <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
+              Save The Draft First To Add Modules And Lessons.
+            </p>
+          </section>
+        )}
       </div>
 
       <aside className="space-y-6 lg:sticky lg:top-24">
@@ -444,7 +363,7 @@ export default function CourseEditor({course}: any) {
               {busy === "submit" && (
                 <Loader2 className="h-4 w-4 animate-spin" />
               )}
-              {busy === "submit" ? "Submitting" : "Submit for Review"}
+              {busy === "submit" ? "Submitting" : "Submit For Review"}
             </button>
             <button
               type="button"
