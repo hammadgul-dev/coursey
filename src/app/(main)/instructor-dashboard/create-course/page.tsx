@@ -1,6 +1,7 @@
 import {redirect} from "next/navigation"
 import {AlertTriangle} from "lucide-react"
-import {getEditorCourse} from "@/data/courseEditor"
+import {getSessionUser} from "@/lib/session"
+import {getEditorData} from "@/lib/editor"
 import CourseEditor from "@/components/instructor-dashboard/CourseEditor"
 
 let statusStyle: any = {
@@ -10,20 +11,33 @@ let statusStyle: any = {
     "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/20",
 }
 
-export default async function CreateCoursePage({searchParams}: any) {
-  let params = (await searchParams) as any
-  let id = params?.id || ""
-  let course = getEditorCourse(id) as any
+export default async function CreateCoursePage({
+  searchParams,
+}: {
+  searchParams: Promise<any>
+}) {
+  let params = await searchParams
+  let id = typeof params?.id === "string" ? params.id : ""
 
-  if (course?.status === "pending" || course?.status === "published") {
+  let sessionUser: any = await getSessionUser()
+  let userId: string | null = sessionUser?.id || null
+  if (!userId) redirect("/login")
+
+  let data: any = await getEditorData(userId, id)
+  if (data?.state === "denied") redirect("/")
+  if (data?.state === "missing") redirect("/instructor-dashboard")
+
+  let course: any = data?.course || null
+  if (course && !["DRAFT", "REJECTED"].includes(course?.status)) {
     redirect("/instructor-dashboard")
   }
 
   let isEdit = !!course?.id
+  let status = (course?.status || "DRAFT").toLowerCase()
 
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
-      {course?.status === "rejected" && course?.feedback && (
+      {status === "rejected" && course?.rejectionReason && (
         <div
           className="fade-up mb-6 flex gap-3 rounded-xl border border-rose-200 bg-rose-50 p-4 dark:border-rose-500/20 dark:bg-rose-500/10"
           style={{animationDelay: "0ms"}}
@@ -31,10 +45,10 @@ export default async function CreateCoursePage({searchParams}: any) {
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600 dark:text-rose-400" />
           <div>
             <p className="text-sm font-semibold text-rose-700 dark:text-rose-400">
-              Rejection feedback from admin
+              Rejection Feedback From Admin
             </p>
             <p className="mt-1 text-sm text-rose-600 dark:text-rose-300">
-              {course?.feedback}
+              {course?.rejectionReason}
             </p>
           </div>
         </div>
@@ -46,9 +60,9 @@ export default async function CreateCoursePage({searchParams}: any) {
             {isEdit ? "Edit Course" : "Create Course"}
           </h1>
           <span
-            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusStyle[course?.status] || statusStyle.draft}`}
+            className={`rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize ${statusStyle[status] || statusStyle.draft}`}
           >
-            {course?.status || "draft"}
+            {status}
           </span>
         </div>
         <p className="mt-1 text-sm text-gray-500 dark:text-zinc-400">
@@ -57,7 +71,7 @@ export default async function CreateCoursePage({searchParams}: any) {
       </div>
 
       <div className="fade-up" style={{animationDelay: "160ms"}}>
-        <CourseEditor course={course} />
+        <CourseEditor key={course?.id || "new"} course={course} />
       </div>
     </main>
   )
