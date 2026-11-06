@@ -30,6 +30,12 @@ let statusMap: Record<string, {label: string; cls: string; dot: string}> = {
   },
 }
 
+statusMap.removed = {
+  label: "Removed",
+  cls: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-gray-400",
+  dot: "bg-gray-400",
+}
+
 let tabs = [
   {key: "all", label: "All"},
   {key: "draft", label: "Draft"},
@@ -45,6 +51,7 @@ export default function CoursesTable({courses}: {courses: any[]}) {
   let [list, setList] = useState(courses)
   let [tab, setTab] = useState("all")
   let [q, setQ] = useState("")
+  let [busyId, setBusyId] = useState("")
   let router = useRouter()
 
   useEffect(() => {
@@ -63,32 +70,36 @@ export default function CoursesTable({courses}: {courses: any[]}) {
   )
 
   let editCourse = (c: any) => {
-    if (c?.status === "pending" || c?.status === "published") {
-      toast.error("Only draft or rejected courses can be edited")
+    if (c?.status !== "draft" && c?.status !== "rejected") {
+      toast.error("Only Draft Or Rejected Courses Can Be Edited")
       return
     }
     router.push(`/instructor-dashboard/create-course?id=${c?.id}`)
   }
 
-  let submit = (course: any) => {
-    setList((previous: any[]) =>
-      previous.map((item: any) =>
-        item.id === course.id
-          ? {
-              ...item,
-              status: "pending",
-              updated: "Submitted just now",
-              feedback: "",
-            }
-          : item,
-      ),
-    )
-
-    toast.success(
-      course.status === "rejected"
-        ? "Course resubmitted for review"
-        : "Course submitted for review",
-    )
+  let submit = async (course: any) => {
+    if (busyId) return
+    setBusyId(course.id)
+    try {
+      let res = await fetch(`/api/instructor/courses/${course.id}/submit`, {
+        method: "POST",
+      })
+      let json = await res.json().catch(() => null)
+      if (!res.ok) {
+        toast.error(json?.error || "Something Went Wrong")
+        return
+      }
+      toast.success(
+        course.status === "rejected"
+          ? "Course Resubmitted For Review"
+          : "Course Submitted For Review",
+      )
+      router.refresh()
+    } catch (e) {
+      toast.error("Something Went Wrong")
+    } finally {
+      setBusyId("")
+    }
   }
 
   return (
@@ -234,9 +245,10 @@ export default function CoursesTable({courses}: {courses: any[]}) {
                           <button
                             type="button"
                             onClick={() => submit(course)}
+                            disabled={busyId === course.id}
                             aria-label="Submit for review"
                             title="Submit for review"
-                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-indigo-500 hover:text-indigo-600 dark:border-zinc-700 dark:text-gray-400 dark:hover:text-indigo-400"
+                            className="flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:border-indigo-500 hover:text-indigo-600 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:text-gray-400 dark:hover:text-indigo-400"
                           >
                             <Send className="h-4 w-4" />
                           </button>
