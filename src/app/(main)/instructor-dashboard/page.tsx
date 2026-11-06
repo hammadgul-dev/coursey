@@ -1,24 +1,59 @@
 import Link from "next/link"
-import {Plus} from "lucide-react"
-import {
-  instructor,
-  sidebarLinks,
-  stats,
-  instructorCourses,
-} from "@/data/instructorData"
+import {redirect} from "next/navigation"
+import {Plus, Library, Users, Clock, Star} from "lucide-react"
+import {sidebarLinks} from "@/data/instructorData"
+import {getSessionUser} from "@/lib/session"
+import {getInstructorDashboard} from "@/lib/instructor"
 import CoursesTable from "@/components/instructor-dashboard/CoursesTable"
 
-export default function InstructorDashboardPage() {
-  const delay = (n: number) => ({animationDelay: `${n * 90}ms`})
+export default async function InstructorDashboardPage() {
+  let sessionUser: any = await getSessionUser()
+  let userId: string | null = sessionUser?.id || null
+  if (!userId) redirect("/login")
+
+  let data: any = await getInstructorDashboard(userId as string)
+  if (!data) redirect("/")
+
+  let delay = (n: number) => ({animationDelay: `${n * 90}ms`})
+
+  let s = data.stats
+  let avgValue = "—"
+  if (s.avgRating > 0) avgValue = s.avgRating.toFixed(1)
+
+  let stats = [
+    {
+      label: "Total Courses",
+      value: String(s.total),
+      note: `${s.published} Published`,
+      icon: Library,
+    },
+    {
+      label: "Total Students",
+      value: String(s.totalStudents),
+      note: "Published Courses",
+      icon: Users,
+    },
+    {
+      label: "Awaiting Review",
+      value: String(s.pending),
+      note: "Pending",
+      icon: Clock,
+    },
+    {
+      label: "Average Rating",
+      value: avgValue,
+      note: `${s.reviewsCount} Reviews`,
+      icon: Star,
+    },
+  ]
 
   return (
     <div className="mx-auto w-full max-w-[1200px] overflow-x-clip px-3 py-5 sm:px-6 sm:py-6 lg:py-10">
       <div className="grid min-w-0 gap-5 sm:gap-6 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-8">
         <aside className="fade-up min-w-0 lg:sticky lg:top-24 lg:self-start">
           <nav className="flex gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-2 dark:border-zinc-800 dark:bg-zinc-900 lg:flex-col">
-            {" "}
             {sidebarLinks.map((l: any) => {
-              const Icon = l.icon
+              let Icon = l.icon
 
               return (
                 <Link
@@ -45,12 +80,12 @@ export default function InstructorDashboardPage() {
           >
             <div className="min-w-0">
               <h1 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100 sm:text-3xl">
-                Welcome back, {instructor.name}
+                Welcome Back, {data.name}
               </h1>
 
               <p className="mt-2 text-sm leading-relaxed text-gray-600 dark:text-gray-400">
-                Manage your courses, review submissions, and track student
-                engagement.
+                Manage Your Courses, Review Submissions, And Track Student
+                Engagement.
               </p>
             </div>
 
@@ -67,12 +102,12 @@ export default function InstructorDashboardPage() {
             className="fade-up grid min-w-0 grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
             style={delay(2)}
           >
-            {stats.map((s: any) => {
-              const Icon = s.icon
+            {stats.map((st: any) => {
+              let Icon = st.icon
 
               return (
                 <div
-                  key={s.label}
+                  key={st.label}
                   className="min-w-0 rounded-xl border border-gray-200 bg-white p-3 transition-colors duration-200 hover:border-indigo-500 dark:border-zinc-800 dark:bg-zinc-900 sm:p-4"
                 >
                   <div className="flex min-w-0 items-start justify-between gap-1.5 sm:gap-2">
@@ -81,16 +116,16 @@ export default function InstructorDashboardPage() {
                     </span>
 
                     <span className="max-w-[70%] break-words rounded-md bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:bg-zinc-800 dark:text-gray-400 sm:px-2 sm:text-[11px]">
-                      {s.note}
+                      {st.note}
                     </span>
                   </div>
 
                   <p className="mt-2 text-xl font-bold text-gray-900 dark:text-gray-100 sm:text-2xl">
-                    {s.value}
+                    {st.value}
                   </p>
 
                   <p className="mt-0.5 break-words text-xs leading-relaxed text-gray-500 dark:text-gray-400 sm:text-sm">
-                    {s.label}
+                    {st.label}
                   </p>
                 </div>
               )
@@ -98,7 +133,7 @@ export default function InstructorDashboardPage() {
           </section>
 
           <div className="fade-up min-w-0" style={delay(3)}>
-            <CoursesTable courses={instructorCourses} />
+            <CoursesTable courses={data.courses || []} />
           </div>
         </main>
       </div>
