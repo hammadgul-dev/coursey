@@ -12,7 +12,7 @@ export async function GET() {
 
     let rows = await prisma.course.findMany({
       where: {instructorId: user.id},
-      orderBy: {updatedAt: "desc"},
+      orderBy: {id: "desc"},
       select: {
         id: true,
         title: true,
@@ -23,7 +23,6 @@ export async function GET() {
         rejectionReason: true,
         submittedAt: true,
         publishedAt: true,
-        updatedAt: true,
         modules: {select: {lessons: {select: {id: true}}}},
         _count: {select: {enrollments: true}},
       },
@@ -42,7 +41,6 @@ export async function GET() {
         rejectionReason: c.rejectionReason,
         submittedAt: c.submittedAt,
         publishedAt: c.publishedAt,
-        updatedAt: c.updatedAt,
         lessonsCount,
         studentsCount: c?._count?.enrollments || 0,
       }
