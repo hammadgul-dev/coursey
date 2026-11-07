@@ -8,9 +8,12 @@ export async function getNavUser() {
 
   let u = await prisma.user.findUnique({
     where: {id: userId},
-    select: {name: true, avatar: true, banned: true},
+    select: {name: true, avatar: true, banned: true, role: true},
   })
   if (!u || u.banned) return null
 
-  return {name: u.name || "User", avatar: u.avatar || ""}
+  let avatar = u.avatar || ""
+  if (!avatar && u.role === "ADMIN") avatar = "/images/profile.jpg"
+
+  return {name: u.name || "User", avatar}
 }
