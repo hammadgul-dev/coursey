@@ -1,9 +1,21 @@
 "use client"
 
-import {useRef, useState} from "react"
+import {useState} from "react"
+import {useRouter} from "next/navigation"
+import {signOut} from "next-auth/react"
 import {AnimatePresence, motion} from "framer-motion"
 import toast from "react-hot-toast"
-import {Camera, Check, Eye, EyeOff, Loader2, Lock, User} from "lucide-react"
+import {
+  Camera,
+  Check,
+  Eye,
+  EyeOff,
+  Loader2,
+  Lock,
+  LogOut,
+  User,
+} from "lucide-react"
+import {request} from "@/lib/request"
 
 let inputCls =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
@@ -22,11 +34,11 @@ let passFields = [
 ]
 
 export default function ProfileForm({user}: {user: any}) {
+  let router = useRouter()
   let [tab, setTab] = useState("profile")
   let [name, setName] = useState(user?.name || "")
   let [headline, setHeadline] = useState(user?.headline || "")
   let [bio, setBio] = useState(user?.bio || "")
-  let [avatar, setAvatar] = useState(user?.avatar || "")
   let [saving, setSaving] = useState(false)
   let [pass, setPass] = useState<any>({current: "", next: "", confirm: ""})
   let [show, setShow] = useState<any>({
@@ -35,7 +47,10 @@ export default function ProfileForm({user}: {user: any}) {
     confirm: false,
   })
   let [changing, setChanging] = useState(false)
-  let fileRef = useRef<any>(null)
+  let [loggingOut, setLoggingOut] = useState(false)
+
+  let isInstructor = user?.role === "INSTRUCTOR"
+  let avatar = user?.avatar || ""
 
   let initials = (name || "")
     .split(" ")
@@ -48,64 +63,73 @@ export default function ProfileForm({user}: {user: any}) {
   let dirty =
     name !== (user?.name || "") ||
     headline !== (user?.headline || "") ||
-    bio !== (user?.bio || "") ||
-    avatar !== (user?.avatar || "")
+    bio !== (user?.bio || "")
 
-  function pickAvatar(e: any) {
-    let file = e.target?.files?.[0]
-    if (!file) return
-    if (!["image/jpeg", "image/png"].includes(file.type)) {
-      toast.error("Only JPG or PNG images are allowed")
-      return
-    }
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error("Image must be under 2 MB")
-      return
-    }
-    setAvatar(URL.createObjectURL(file))
-    e.target.value = ""
+  let avatarSoon = () => {
+    toast("Photo Upload Coming Soon")
   }
 
-  function discard() {
+  let discard = () => {
     setName(user?.name || "")
     setHeadline(user?.headline || "")
     setBio(user?.bio || "")
-    setAvatar(user?.avatar || "")
   }
 
-  async function saveProfile() {
+  let saveProfile = async () => {
     if (name.trim().length < 2) {
-      toast.error("Name must be at least 2 characters")
+      toast.error("Name Must Be At Least 2 Characters")
       return
     }
     setSaving(true)
-    await new Promise((r) => setTimeout(r, 1000))
+    let body: any = {name: name.trim(), bio: bio.trim()}
+    if (isInstructor) body.headline = headline.trim()
+    let res: any = await request("/api/profile", "PATCH", body)
     setSaving(false)
-    toast.success("Profile updated")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    setName(res?.data?.name || name.trim())
+    setBio(res?.data?.bio || "")
+    if (isInstructor) setHeadline(res?.data?.headline || "")
+    toast.success("Profile Updated")
+    router.refresh()
   }
 
-  async function changePassword() {
+  let changePassword = async () => {
     if (!pass.current || !pass.next || !pass.confirm) {
-      toast.error("Please fill all password fields")
+      toast.error("Please Fill All Password Fields")
       return
     }
     if (pass.next.length < 8) {
-      toast.error("New password must be at least 8 characters")
+      toast.error("Password Must Be At Least 8 Characters")
       return
     }
     if (pass.next === pass.current) {
-      toast.error("New password must be different from current password")
+      toast.error("New Password Must Be Different")
       return
     }
     if (pass.next !== pass.confirm) {
-      toast.error("Passwords do not match")
+      toast.error("Passwords Do Not Match")
       return
     }
     setChanging(true)
-    await new Promise((r) => setTimeout(r, 1000))
+    let res: any = await request("/api/profile/password", "POST", {
+      currentPassword: pass.current,
+      newPassword: pass.next,
+    })
     setChanging(false)
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
     setPass({current: "", next: "", confirm: ""})
-    toast.success("Password changed")
+    toast.success("Password Changed")
+  }
+
+  let logout = async () => {
+    setLoggingOut(true)
+    await signOut({callbackUrl: "/"})
   }
 
   return (
@@ -154,7 +178,7 @@ export default function ProfileForm({user}: {user: any}) {
             <div
               className={`${cardCls} flex flex-col items-center gap-4 sm:flex-row`}
             >
-              <div className="group relative h-20 w-20 shrink-0">
+              <div className="relative h-20 w-20 shrink-0">
                 {avatar ? (
                   <img
                     src={avatar}
@@ -168,7 +192,8 @@ export default function ProfileForm({user}: {user: any}) {
                 )}
                 <button
                   type="button"
-                  onClick={() => fileRef.current?.click()}
+                  onClick={avatarSoon}
+                  aria-label="Change Photo"
                   className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-indigo-600 transition-all duration-200 hover:border-indigo-500 active:scale-95 dark:border-zinc-700 dark:bg-zinc-900"
                 >
                   <Camera className="h-4 w-4" />
@@ -176,42 +201,19 @@ export default function ProfileForm({user}: {user: any}) {
               </div>
               <div className="flex-1 text-center sm:text-left">
                 <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
-                  Profile photo
+                  Profile Photo
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                  JPG or PNG, max 2 MB
+                  Photo Upload Is Coming Soon
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={() => fileRef.current?.click()}
-                  className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-800 dark:text-zinc-300 dark:hover:text-indigo-300"
-                >
-                  Upload new
-                </button>
-                <AnimatePresence>
-                  {avatar && (
-                    <motion.button
-                      initial={{opacity: 0, scale: 0.9}}
-                      animate={{opacity: 1, scale: 1}}
-                      exit={{opacity: 0, scale: 0.9}}
-                      type="button"
-                      onClick={() => setAvatar("")}
-                      className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-red-600 transition-all duration-200 hover:border-red-500 active:scale-95 dark:border-zinc-800"
-                    >
-                      Remove
-                    </motion.button>
-                  )}
-                </AnimatePresence>
-              </div>
-              <input
-                ref={fileRef}
-                type="file"
-                accept="image/png,image/jpeg"
-                onChange={pickAvatar}
-                className="hidden"
-              />
+              <button
+                type="button"
+                onClick={avatarSoon}
+                className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-800 dark:text-zinc-300 dark:hover:text-indigo-300"
+              >
+                Upload New
+              </button>
             </div>
 
             <div className={`${cardCls} space-y-4`}>
@@ -225,7 +227,7 @@ export default function ProfileForm({user}: {user: any}) {
                 />
               </div>
 
-              {user?.role === "instructor" && (
+              {isInstructor && (
                 <div>
                   <label className={labelCls}>Headline</label>
                   <input
@@ -312,6 +314,7 @@ export default function ProfileForm({user}: {user: any}) {
                     onChange={(e) =>
                       setPass({...pass, [f.key]: e.target.value})
                     }
+                    maxLength={72}
                     className={`${inputCls} pr-11`}
                   />
                   <button
@@ -347,6 +350,32 @@ export default function ProfileForm({user}: {user: any}) {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <div
+        className={`${cardCls} mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`}
+      >
+        <div>
+          <p className="text-sm font-semibold text-gray-900 dark:text-zinc-100">
+            Log Out
+          </p>
+          <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
+            Sign out of your account on this device.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={logout}
+          disabled={loggingOut}
+          className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border border-red-200 px-5 py-2.5 text-sm font-medium text-red-600 transition-all duration-200 hover:border-red-500 hover:bg-red-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+        >
+          {loggingOut ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="h-4 w-4" />
+          )}
+          Log Out
+        </button>
+      </div>
     </div>
   )
 }
