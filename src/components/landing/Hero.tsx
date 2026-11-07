@@ -1,10 +1,24 @@
 "use client"
 
 import Link from "next/link"
+import {useSession} from "next-auth/react"
 import {motion} from "framer-motion"
-import {ArrowRight, CheckCircle2} from "lucide-react"
+import {ArrowRight} from "lucide-react"
+
+let dashboards: any = {
+  STUDENT: "/student-dashboard",
+  INSTRUCTOR: "/instructor-dashboard",
+  ADMIN: "/admin-dashboard",
+}
 
 export default function Hero() {
+  let {data: session, status} = useSession()
+  let role = (session as any)?.user?.role || ""
+  let dashboardHref = dashboards[role] || ""
+  let secondaryCls =
+    "inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-semibold text-gray-900 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 sm:w-auto sm:text-sm dark:border-zinc-800 dark:bg-transparent dark:text-white dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+  if (status === "loading") secondaryCls += " invisible"
+
   return (
     <section className="mx-auto grid max-w-6xl items-center gap-10 px-5 py-14 sm:px-8 sm:py-20 md:grid-cols-2 md:gap-14">
       <div>
@@ -42,12 +56,15 @@ export default function Hero() {
             Browse Courses
             <ArrowRight className="h-3.5 w-3.5 transition-transform duration-200 group-hover:translate-x-1 sm:h-4 sm:w-4" />
           </Link>
-          <Link
-            href="/signup"
-            className="inline-flex w-full cursor-pointer items-center justify-center rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-xs font-semibold text-gray-900 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 sm:w-auto sm:text-sm dark:border-zinc-800 dark:bg-transparent dark:text-white dark:hover:border-indigo-500 dark:hover:text-indigo-400"
-          >
-            Become an Instructor
-          </Link>
+          {dashboardHref ? (
+            <Link href={dashboardHref} className={secondaryCls}>
+              Go To Dashboard
+            </Link>
+          ) : (
+            <Link href="/signup" className={secondaryCls}>
+              Become an Instructor
+            </Link>
+          )}
         </motion.div>
       </div>
 
