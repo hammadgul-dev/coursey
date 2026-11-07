@@ -1,46 +1,114 @@
 "use client"
 
-import {useState} from "react"
+import {useEffect, useRef, useState} from "react"
 import Link from "next/link"
+import {useRouter} from "next/navigation"
 import {AnimatePresence, motion} from "framer-motion"
 import toast from "react-hot-toast"
 import {Eye, Search, Trash2} from "lucide-react"
-import {adminCourses} from "@/data/adminData"
+import {request} from "@/lib/request"
 
-let tabs = ["All", "Published", "Rejected", "Removed"]
+let tabs = [
+  {key: "", label: "All"},
+  {key: "PUBLISHED", label: "Published"},
+  {key: "REJECTED", label: "Rejected"},
+  {key: "REMOVED", label: "Removed"},
+]
 
 let badge = {
-  published:
+  PUBLISHED:
     "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400",
-  rejected: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
-  removed: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400",
+  REJECTED: "bg-red-50 text-red-700 dark:bg-red-500/10 dark:text-red-400",
+  REMOVED: "bg-gray-100 text-gray-600 dark:bg-zinc-800 dark:text-zinc-400",
+  PENDING:
+    "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400",
+  DRAFT:
+    "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400",
 } as any
 
 let cols = "md:grid-cols-[2.2fr_1.2fr_1fr_0.8fr_1fr_auto]"
 
-export default function CoursesManager() {
-  let [courses, setCourses] = useState(adminCourses as any[])
-  let [tab, setTab] = useState("All")
+let fmt = (d: any) => {
+  if (!d) return "—"
+  return new Date(d).toLocaleDateString("en-US", {
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  })
+}
+
+export default function CoursesManager({counts}: {counts: any}) {
+  let router = useRouter()
+  let [courses, setCourses] = useState([] as any[])
+  let [tab, setTab] = useState("")
   let [query, setQuery] = useState("")
+  let [search, setSearch] = useState("")
+  let [page, setPage] = useState(1)
+  let [totalPages, setTotalPages] = useState(1)
+  let [loading, setLoading] = useState(true)
   let [confirmId, setConfirmId] = useState(null as any)
+  let [busyId, setBusyId] = useState(null as any)
+  let reqId = useRef(0)
 
-  let count = (t: string) =>
-    t === "All"
-      ? courses.length
-      : courses.filter((c: any) => c.status === t.toLowerCase()).length
+  let sig = JSON.stringify(counts || {})
 
-  let list = courses.filter(
-    (c: any) =>
-      (tab === "All" || c.status === tab.toLowerCase()) &&
-      (c.title + c.instructor).toLowerCase().includes(query.toLowerCase()),
-  )
+  let total =
+    (counts?.draft || 0) +
+    (counts?.pending || 0) +
+    (counts?.published || 0) +
+    (counts?.rejected || 0) +
+    (counts?.removed || 0)
 
-  let removeCourse = (id: any) => {
-    setCourses((p: any) =>
-      p.map((c: any) => (c.id === id ? {...c, status: "removed"} : c)),
-    )
+  let count = (k: string) => {
+    if (k === "") return total
+    return counts?.[k.toLowerCase()] || 0
+  }
+
+  useEffect(() => {
+    let t = setTimeout(() => {
+      setSearch(query.trim())
+      setPage(1)
+    }, 400)
+    return () => clearTimeout(t)
+  }, [query])
+
+  useEffect(() => {
+    let id = ++reqId.current
+    let run = async () => {
+      setLoading(true)
+      let url = `/api/admin/courses?page=${page}&limit=10`
+      if (tab) url += `&status=${tab}`
+      if (search) url += `&search=${encodeURIComponent(search)}`
+      let res: any = await request(url, "GET")
+      if (id !== reqId.current) return
+      if (res?.ok) {
+        setCourses(res?.data?.courses || [])
+        setTotalPages(res?.data?.totalPages || 1)
+      } else {
+        toast.error(res?.error || "Something Went Wrong")
+      }
+      setLoading(false)
+    }
+    run()
+  }, [tab, search, page, sig])
+
+  let changeTab = (k: string) => {
+    setTab(k)
+    setPage(1)
     setConfirmId(null)
-    toast.success("Course removed from platform")
+  }
+
+  let removeCourse = async (id: string) => {
+    setBusyId(id)
+    let res: any = await request(`/api/admin/courses/${id}/remove`, "POST")
+    setBusyId(null)
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    setConfirmId(null)
+    toast.success("Course Removed")
+    router.refresh()
   }
 
   return (
@@ -54,6 +122,7 @@ export default function CoursesManager() {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
+            maxLength={100}
             placeholder="Search by course or instructor"
             className="w-full rounded-lg border border-gray-300 bg-white py-2 pl-9 pr-3 text-sm text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-50"
           />
@@ -61,15 +130,15 @@ export default function CoursesManager() {
         <div className="flex w-full gap-1 overflow-x-auto rounded-xl border border-gray-200 bg-white p-1 dark:border-zinc-800 dark:bg-zinc-900 sm:w-fit">
           {tabs.map((t) => (
             <button
-              key={t}
-              onClick={() => setTab(t)}
+              key={t.key}
+              onClick={() => changeTab(t.key)}
               className={`relative shrink-0 cursor-pointer rounded-lg px-2.5 py-1 text-xs font-medium transition-colors duration-200 ${
-                tab === t
+                tab === t.key
                   ? "text-white"
                   : "text-gray-600 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400"
               }`}
             >
-              {tab === t && (
+              {tab === t.key && (
                 <motion.span
                   layoutId="courses-tab"
                   transition={{type: "spring", stiffness: 400, damping: 32}}
@@ -77,7 +146,7 @@ export default function CoursesManager() {
                 />
               )}
               <span className="relative">
-                {t} ({count(t)})
+                {t.label} ({count(t.key)})
               </span>
             </button>
           ))}
@@ -97,7 +166,7 @@ export default function CoursesManager() {
         </div>
 
         <AnimatePresence initial={false} mode="popLayout">
-          {list.map((c: any) => (
+          {courses.map((c: any) => (
             <motion.div
               key={c.id}
               layout
@@ -112,50 +181,59 @@ export default function CoursesManager() {
               >
                 <div className="col-span-2 md:col-span-1">
                   <p className="text-sm font-medium text-gray-900 dark:text-zinc-50">
-                    {c.title}
+                    {c.title || "Untitled"}
                   </p>
                   <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400 md:hidden">
-                    {c.instructor}
+                    {c?.instructor?.name || "Unknown"}
                   </p>
+                  {c.status === "REJECTED" && c.rejectionReason && (
+                    <p className="mt-1 line-clamp-2 text-xs text-red-600 dark:text-red-400">
+                      {c.rejectionReason}
+                    </p>
+                  )}
                 </div>
                 <p className="hidden text-sm text-gray-600 dark:text-zinc-400 md:block">
-                  {c.instructor}
+                  {c?.instructor?.name || "Unknown"}
                 </p>
                 <div>
                   <span
-                    className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold capitalize ${badge[c.status]}`}
+                    className={`inline-block rounded-md px-2 py-0.5 text-xs font-semibold capitalize ${badge[c.status] || ""}`}
                   >
-                    {c.status}
+                    {(c.status || "").toLowerCase()}
                   </span>
                 </div>
                 <p className="text-sm text-gray-700 dark:text-zinc-300">
-                  {c.students ? c.students.toLocaleString("en-US") : "—"}
+                  {c.studentsCount
+                    ? c.studentsCount.toLocaleString("en-US")
+                    : "—"}
                   <span className="text-xs text-gray-400 md:hidden">
                     {" "}
                     students
                   </span>
                 </p>
                 <p className="text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
-                  {c.date || "—"}
+                  {fmt(c.publishedAt)}
                 </p>
                 <div className="col-span-2 flex items-center justify-end gap-1 md:col-span-1 md:w-16">
-                  <Link
-                    href={`/courses/${c.id}`}
-                    aria-label="Preview course"
-                    className="cursor-pointer rounded-lg p-2 text-gray-400 transition-colors duration-200 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400"
-                  >
-                    <Eye size={16} />
-                  </Link>
-                  {c.status === "published" && (
-                    <button
-                      onClick={() =>
-                        setConfirmId(confirmId === c.id ? null : c.id)
-                      }
-                      aria-label="Remove course"
-                      className="cursor-pointer rounded-lg p-2 text-gray-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                  {c.status === "PUBLISHED" && (
+                    <>
+                      <Link
+                        href={`/courses/${c.id}`}
+                        aria-label="Preview Course"
+                        className="cursor-pointer rounded-lg p-2 text-gray-400 transition-colors duration-200 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-400"
+                      >
+                        <Eye size={16} />
+                      </Link>
+                      <button
+                        onClick={() =>
+                          setConfirmId(confirmId === c.id ? null : c.id)
+                        }
+                        aria-label="Remove Course"
+                        className="cursor-pointer rounded-lg p-2 text-gray-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -182,9 +260,10 @@ export default function CoursesManager() {
                         </button>
                         <button
                           onClick={() => removeCourse(c.id)}
-                          className="flex-1 cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:bg-red-700 active:scale-95 sm:flex-none sm:text-sm"
+                          disabled={busyId === c.id}
+                          className="flex-1 cursor-pointer rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition-all duration-200 hover:bg-red-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:flex-none sm:text-sm"
                         >
-                          Remove
+                          {busyId === c.id ? "Removing..." : "Remove"}
                         </button>
                       </div>
                     </div>
@@ -195,12 +274,40 @@ export default function CoursesManager() {
           ))}
         </AnimatePresence>
 
-        {list.length === 0 && (
+        {loading && courses.length === 0 && (
           <p className="px-5 py-10 text-center text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
-            No courses found
+            Loading...
+          </p>
+        )}
+
+        {!loading && courses.length === 0 && (
+          <p className="px-5 py-10 text-center text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
+            No Courses Found
           </p>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <div className="mt-3 flex items-center justify-between gap-3">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page <= 1 || loading}
+            className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-gray-500 dark:text-zinc-400">
+            Page {page} Of {totalPages}
+          </span>
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page >= totalPages || loading}
+            className="cursor-pointer rounded-lg border border-gray-200 px-3 py-1.5 text-xs font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:text-zinc-300"
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   )
 }
