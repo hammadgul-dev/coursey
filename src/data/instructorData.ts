@@ -16,7 +16,7 @@ export let sidebarLinks = [
   },
   {
     label: "Profile",
-    href: "/profile?role=instructor",
+    href: "/profile",
     icon: UserCog,
     active: false,
   },
