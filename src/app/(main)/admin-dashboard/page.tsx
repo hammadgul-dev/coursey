@@ -1,4 +1,5 @@
 import Link from "next/link"
+import {redirect} from "next/navigation"
 import {
   BookOpen,
   CheckCircle2,
@@ -10,7 +11,9 @@ import {
 import ReviewQueue from "@/components/admin-dashboard/ReviewQueue"
 import CoursesManager from "@/components/admin-dashboard/CoursesManager"
 import UsersTable from "@/components/admin-dashboard/UsersTable"
-import {adminPending, adminStats} from "@/data/adminData"
+import {prisma} from "@/lib/prisma"
+import {getSessionUser} from "@/lib/session"
+import {getAdminStats} from "@/lib/admin"
 
 let nav = [
   {label: "Overview", href: "#overview", icon: LayoutDashboard},
@@ -20,30 +23,45 @@ let nav = [
   {label: "Profile", href: "/profile?role=admin", icon: UserCog},
 ]
 
-export default function AdminPage() {
+export default async function AdminPage() {
+  let sessionUser: any = await getSessionUser()
+  let userId: string | null = sessionUser?.id || null
+  if (!userId) redirect("/login")
+
+  let me = await prisma.user.findUnique({
+    where: {id: userId as string},
+    select: {role: true, banned: true},
+  })
+  if (!me || me.banned || me.role !== "ADMIN") redirect("/")
+
+  let data = await getAdminStats()
+  let c = data.courses
+  let totalCourses = c.draft + c.pending + c.published + c.rejected + c.removed
+  let totalUsers = data.users.students + data.users.instructors
+
   let stats = [
     {
       label: "Total Users",
-      value: adminStats.users.toLocaleString("en-US"),
-      hint: "Students and instructors",
+      value: totalUsers.toLocaleString("en-US"),
+      hint: `${data.users.banned} banned`,
       icon: Users,
     },
     {
       label: "Total Courses",
-      value: adminStats.courses,
+      value: totalCourses,
       hint: "All statuses",
       icon: BookOpen,
     },
     {
       label: "Pending Review",
-      value: adminPending.length,
+      value: c.pending,
       hint: "Awaiting your decision",
       icon: ClipboardCheck,
       accent: true,
     },
     {
       label: "Published",
-      value: adminStats.published,
+      value: c.published,
       hint: "Live on platform",
       icon: CheckCircle2,
     },
@@ -62,9 +80,9 @@ export default function AdminPage() {
               >
                 <n.icon size={16} />
                 {n.label}
-                {n.href === "#review" && adminPending.length > 0 && (
+                {n.href === "#review" && c.pending > 0 && (
                   <span className="ml-auto rounded-full bg-red-600 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-white">
-                    {adminPending.length}
+                    {c.pending}
                   </span>
                 )}
               </Link>
@@ -134,10 +152,10 @@ export default function AdminPage() {
                 All Courses
               </h2>
               <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
-                Published, rejected and removed courses.
+                Every course on the platform, with its current status.
               </p>
             </div>
-            <CoursesManager />
+            <CoursesManager counts={c} />
           </section>
 
           <section id="users" className="min-w-0 scroll-mt-24">
@@ -146,10 +164,10 @@ export default function AdminPage() {
                 Users
               </h2>
               <p className="mt-1 text-xs text-gray-500 dark:text-zinc-400 sm:text-sm">
-                Ban or remove accounts when needed.
+                Ban or unban accounts when needed.
               </p>
             </div>
-            <UsersTable />
+            <UsersTable counts={data.users} />
           </section>
         </div>
       </div>
