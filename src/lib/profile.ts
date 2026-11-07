@@ -16,13 +16,16 @@ export async function getProfile(userId: string) {
   })
   if (!u || u.banned) return null
 
+  let avatar = u.avatar || ""
+  if (!avatar && u.role === "ADMIN") avatar = "/images/profile.jpg"
+
   return {
     name: u.name || "",
     email: u.email || "",
     role: u.role,
     headline: u.headline || "",
     bio: u.bio || "",
-    avatar: u.avatar || "",
+    avatar,
     createdAt: u.createdAt,
   }
 }
