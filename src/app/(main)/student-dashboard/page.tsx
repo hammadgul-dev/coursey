@@ -61,7 +61,7 @@ export default async function StudentDashboardPage() {
     },
     {
       label: "Profile",
-      href: "/profile?role=student",
+      href: "/profile",
       icon: UserCog,
       count: 0,
       active: false,
