@@ -20,7 +20,7 @@ let nav = [
   {label: "Pending Review", href: "#review", icon: ClipboardCheck},
   {label: "All Courses", href: "#courses", icon: BookOpen},
   {label: "Users", href: "#users", icon: Users},
-  {label: "Profile", href: "/profile?role=admin", icon: UserCog},
+  {label: "Profile", href: "/profile", icon: UserCog},
 ]
 
 export default async function AdminPage() {
