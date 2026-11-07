@@ -39,8 +39,8 @@ export async function GET(req: Request) {
       ]
     }
 
-    let orderBy: any =
-      status === "PENDING" ? {submittedAt: "asc"} : {updatedAt: "desc"}
+    let orderBy: any = {id: "desc"}
+    if (status === "PENDING") orderBy = {submittedAt: "asc"}
 
     let [total, rows] = await Promise.all([
       prisma.course.count({where}),
@@ -58,7 +58,6 @@ export async function GET(req: Request) {
           rejectionReason: true,
           submittedAt: true,
           publishedAt: true,
-          updatedAt: true,
           instructor: {select: {id: true, name: true}},
           modules: {select: {lessons: {select: {id: true}}}},
           adminReviews: {
@@ -83,7 +82,6 @@ export async function GET(req: Request) {
         rejectionReason: c.rejectionReason,
         submittedAt: c.submittedAt,
         publishedAt: c.publishedAt,
-        updatedAt: c.updatedAt,
         instructor: c.instructor,
         lessonsCount,
         studentsCount: c?._count?.enrollments || 0,
