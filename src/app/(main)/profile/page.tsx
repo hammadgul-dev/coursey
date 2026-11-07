@@ -1,32 +1,39 @@
+import {redirect} from "next/navigation"
 import ProfileForm from "@/components/profile/ProfileForm"
-import {profileUsers} from "@/data/profileData"
+import {getSessionUser} from "@/lib/session"
+import {getProfile} from "@/lib/profile"
 
-export default async function ProfilePage({
-  searchParams,
-}: {
-  searchParams: Promise<any>
-}) {
-  let sp = (await searchParams) as any
-  let role = ["student", "instructor", "admin"].includes(sp?.role)
-    ? sp.role
-    : "student"
-  let user = (profileUsers as any)[role] || profileUsers.student
-  let joined = new Date(user?.joined || "").toLocaleDateString("en-US", {
+export default async function ProfilePage() {
+  let sessionUser: any = await getSessionUser()
+  let userId: string | null = sessionUser?.id || null
+  if (!userId) redirect("/login")
+
+  let user: any = await getProfile(userId as string)
+  if (!user) redirect("/login")
+
+  let roleText = String(user.role || "").toLowerCase()
+  let joined = new Date(user.createdAt).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
   })
 
   let info = [
-    {label: "Email", value: user?.email || ""},
+    {label: "Email", value: user.email || ""},
     {
       label: "Role",
-      value:
-        (user?.role || "").charAt(0).toUpperCase() +
-        (user?.role || "").slice(1),
+      value: roleText.charAt(0).toUpperCase() + roleText.slice(1),
     },
     {label: "Joined", value: joined},
   ]
+
+  let formUser = {
+    name: user.name,
+    role: user.role,
+    headline: user.headline,
+    bio: user.bio,
+    avatar: user.avatar,
+  }
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
@@ -35,7 +42,7 @@ export default async function ProfilePage({
           Account Settings
         </h1>
         <span className="rounded-md bg-indigo-50 px-2.5 py-1 text-xs font-semibold capitalize text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
-          {user?.role}
+          {roleText}
         </span>
       </div>
       <p
@@ -63,7 +70,7 @@ export default async function ProfilePage({
       </div>
 
       <div className="fade-up mt-6" style={{animationDelay: "320ms"}}>
-        <ProfileForm user={user} />
+        <ProfileForm user={formUser} />
       </div>
     </main>
   )
