@@ -2,6 +2,7 @@ import {prisma} from "@/lib/prisma"
 import {fail, ok, serverError} from "@/lib/api"
 import {requireRole} from "@/lib/session"
 import {courseUpdateSchema, idSchema} from "@/validations/course"
+import {coverFolder, deleteImage} from "@/lib/cloudinary"
 
 let editable = ["DRAFT", "REJECTED"] as any
 
@@ -149,6 +150,7 @@ export async function DELETE(
       where: {id: course.id, instructorId: user.id, status: {in: editable}},
     })
     if (result.count === 0) return fail("Course Could Not Be Deleted", 409)
+    await deleteImage(`${coverFolder}/${course.id}`).catch(() => null)
 
     return ok({id: course.id})
   } catch (e) {
