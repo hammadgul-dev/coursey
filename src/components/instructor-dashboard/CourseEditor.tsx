@@ -1,12 +1,13 @@
 "use client"
 
-import {useState} from "react"
+import {useRef, useState} from "react"
 import {useRouter} from "next/navigation"
 import {motion} from "framer-motion"
 import toast from "react-hot-toast"
-import {Check, ChevronDown, Loader2, Plus, X} from "lucide-react"
+import {Check, ChevronDown, Loader2, Plus, Upload, X} from "lucide-react"
 import {categories, levels} from "@/lib/editorOptions"
 import {request} from "@/lib/request"
+import {uploadFile} from "@/lib/upload"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
 import Curriculum from "@/components/instructor-dashboard/Curriculum"
 
@@ -18,14 +19,18 @@ let labelCls = "mb-1.5 block text-sm font-medium"
 let counterCls = (len: number, max: number) =>
   `text-xs tabular-nums transition-colors ${len >= max ? "text-amber-500" : "text-gray-400 dark:text-zinc-500"}`
 
+let imageTypes = ["image/jpeg", "image/png", "image/webp"]
+
 export default function CourseEditor({course}: any) {
   let router = useRouter()
+  let fileRef = useRef<HTMLInputElement>(null)
   let courseId: string = course?.id || ""
 
   let initLearn: string[] = course?.learn || []
   if (initLearn.length === 0) initLearn = [""]
 
   let [busy, setBusy] = useState("")
+  let [coverBusy, setCoverBusy] = useState("")
   let [title, setTitle] = useState(course?.title || "")
   let [description, setDescription] = useState(course?.description || "")
   let [category, setCategory] = useState(course?.category || "")
@@ -45,6 +50,57 @@ export default function CourseEditor({course}: any) {
   }
 
   let removeLearn = (i: number) => setLearn(learn.filter((_, k) => k !== i))
+
+  let openPicker = () => {
+    if (coverBusy) return
+    if (!courseId) {
+      toast.error("Save The Draft First")
+      return
+    }
+    fileRef.current?.click()
+  }
+
+  let pickCover = async (e: any) => {
+    let file = e?.target?.files?.[0]
+    if (e?.target) e.target.value = ""
+    if (!file || coverBusy || !courseId) return
+    if (!imageTypes.includes(file.type)) {
+      toast.error("Only Jpg, Png Or Webp Allowed")
+      return
+    }
+    if (file.size > 3 * 1024 * 1024) {
+      toast.error("Image Must Be Under 3 Mb")
+      return
+    }
+    setCoverBusy("upload")
+    let res: any = await uploadFile(
+      `/api/upload/cover?courseId=${courseId}`,
+      file,
+    )
+    setCoverBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    setCover(res?.data?.cover || "")
+    toast.success("Cover Updated")
+  }
+
+  let removeCover = async () => {
+    if (coverBusy || !courseId) return
+    setCoverBusy("remove")
+    let res: any = await request(
+      `/api/upload/cover?courseId=${courseId}`,
+      "DELETE",
+    )
+    setCoverBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    setCover("")
+    toast.success("Cover Removed")
+  }
 
   let modList = course?.modules || []
   let allLessons = modList.flatMap((m: any) => m?.lessons || [])
@@ -274,21 +330,52 @@ export default function CourseEditor({course}: any) {
             </div>
 
             <div>
-              <label className={labelCls}>Cover Image Url (Optional)</label>
-              <input
-                value={cover}
-                maxLength={500}
-                onChange={(e) => setCover(e.target.value)}
-                placeholder="https://..."
-                className={inputCls}
-              />
-              {cover.trim().startsWith("http") && (
+              <label className={labelCls}>Cover Image (Optional)</label>
+              {cover && (
                 <img
-                  src={cover.trim()}
+                  src={cover}
                   alt="Cover preview"
-                  className="mt-3 aspect-video w-full rounded-lg border border-gray-200 object-cover dark:border-zinc-800 sm:w-64"
+                  className="mb-3 aspect-video w-full rounded-lg border border-gray-200 object-cover dark:border-zinc-800 sm:w-64"
                 />
               )}
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  disabled={!!coverBusy}
+                  onClick={openPicker}
+                  className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-1.5 text-sm font-medium transition-all hover:border-indigo-500 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-800 dark:hover:text-indigo-400"
+                >
+                  {coverBusy === "upload" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Upload className="h-4 w-4" />
+                  )}
+                  {cover ? "Replace Cover" : "Upload Cover"}
+                </button>
+                {cover && (
+                  <button
+                    type="button"
+                    disabled={!!coverBusy}
+                    onClick={removeCover}
+                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-all hover:border-red-500 hover:bg-red-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    {coverBusy === "remove" && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    Remove
+                  </button>
+                )}
+                <span className="text-xs text-gray-500 dark:text-zinc-400">
+                  Jpg, Png Or Webp, Max 3 Mb
+                </span>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={pickCover}
+                className="hidden"
+              />
             </div>
 
             <div>
