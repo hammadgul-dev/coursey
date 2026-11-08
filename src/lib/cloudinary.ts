@@ -43,3 +43,5 @@ export let deleteImage = async (publicId: string) => {
     invalidate: true,
   })
 }
+
+export let coverFolder = "coursey/coursey-image/covers"
