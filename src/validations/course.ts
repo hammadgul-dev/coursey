@@ -30,6 +30,13 @@ export let courseSchema = z.object({
     .trim()
     .url("Cover Must Be A Valid Url")
     .max(500, "Cover Url Is Too Long")
+    .refine(
+      (v) =>
+        v.startsWith(
+          `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/`,
+        ),
+      "Cover Must Be An Uploaded Image",
+    )
     .optional()
     .or(z.literal("")),
   learn: z
