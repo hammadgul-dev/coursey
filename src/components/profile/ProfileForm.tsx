@@ -1,6 +1,6 @@
 "use client"
 
-import {useState} from "react"
+import {useRef, useState} from "react"
 import {useRouter} from "next/navigation"
 import {signOut} from "next-auth/react"
 import {AnimatePresence, motion} from "framer-motion"
@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react"
 import {request} from "@/lib/request"
+import {uploadFile} from "@/lib/upload"
 
 let inputCls =
   "w-full rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm text-gray-900 outline-none transition-all duration-200 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-100 dark:placeholder:text-zinc-500"
@@ -32,14 +33,17 @@ let passFields = [
   {key: "next", label: "New Password"},
   {key: "confirm", label: "Confirm New Password"},
 ]
+let imageTypes = ["image/jpeg", "image/png", "image/webp"]
 
 export default function ProfileForm({user}: {user: any}) {
   let router = useRouter()
+  let fileRef = useRef<HTMLInputElement>(null)
   let [tab, setTab] = useState("profile")
   let [name, setName] = useState(user?.name || "")
   let [headline, setHeadline] = useState(user?.headline || "")
   let [bio, setBio] = useState(user?.bio || "")
   let [saving, setSaving] = useState(false)
+  let [avatarBusy, setAvatarBusy] = useState("")
   let [pass, setPass] = useState<any>({current: "", next: "", confirm: ""})
   let [show, setShow] = useState<any>({
     current: false,
@@ -65,8 +69,45 @@ export default function ProfileForm({user}: {user: any}) {
     headline !== (user?.headline || "") ||
     bio !== (user?.bio || "")
 
-  let avatarSoon = () => {
-    toast("Photo Upload Coming Soon")
+  let openPicker = () => {
+    if (avatarBusy) return
+    fileRef.current?.click()
+  }
+
+  let pickAvatar = async (e: any) => {
+    let file = e?.target?.files?.[0]
+    if (e?.target) e.target.value = ""
+    if (!file || avatarBusy) return
+    if (!imageTypes.includes(file.type)) {
+      toast.error("Only Jpg, Png Or Webp Allowed")
+      return
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Image Must Be Under 2 MB")
+      return
+    }
+    setAvatarBusy("upload")
+    let res: any = await uploadFile("/api/upload/avatar", file)
+    setAvatarBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    toast.success("Photo Updated")
+    router.refresh()
+  }
+
+  let removeAvatar = async () => {
+    if (avatarBusy) return
+    setAvatarBusy("remove")
+    let res: any = await request("/api/upload/avatar", "DELETE")
+    setAvatarBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    toast.success("Photo Removed")
+    router.refresh()
   }
 
   let discard = () => {
@@ -192,11 +233,16 @@ export default function ProfileForm({user}: {user: any}) {
                 )}
                 <button
                   type="button"
-                  onClick={avatarSoon}
+                  onClick={openPicker}
+                  disabled={!!avatarBusy}
                   aria-label="Change Photo"
-                  className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-indigo-600 transition-all duration-200 hover:border-indigo-500 active:scale-95 dark:border-zinc-700 dark:bg-zinc-900"
+                  className="absolute -bottom-1 -right-1 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-gray-200 bg-white text-indigo-600 transition-all duration-200 hover:border-indigo-500 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 dark:border-zinc-700 dark:bg-zinc-900"
                 >
-                  <Camera className="h-4 w-4" />
+                  {avatarBusy === "upload" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </button>
               </div>
               <div className="flex-1 text-center sm:text-left">
@@ -204,16 +250,39 @@ export default function ProfileForm({user}: {user: any}) {
                   Profile Photo
                 </p>
                 <p className="mt-0.5 text-xs text-gray-500 dark:text-zinc-400">
-                  Photo Upload Is Coming Soon
+                  Jpg, Png Or Webp, Max 2 Mb
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={avatarSoon}
-                className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-800 dark:text-zinc-300 dark:hover:text-indigo-300"
-              >
-                Upload New
-              </button>
+              <div className="flex gap-2">
+                {avatar && (
+                  <button
+                    type="button"
+                    onClick={removeAvatar}
+                    disabled={!!avatarBusy}
+                    className="flex cursor-pointer items-center gap-2 rounded-xl border border-red-200 px-4 py-2 text-sm font-medium text-red-600 transition-all duration-200 hover:border-red-500 hover:bg-red-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+                  >
+                    {avatarBusy === "remove" && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    Remove
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={openPicker}
+                  disabled={!!avatarBusy}
+                  className="cursor-pointer rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition-all duration-200 hover:border-indigo-500 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-800 dark:text-zinc-300 dark:hover:text-indigo-300"
+                >
+                  Upload New
+                </button>
+              </div>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={pickAvatar}
+                className="hidden"
+              />
             </div>
 
             <div className={`${cardCls} space-y-4`}>
