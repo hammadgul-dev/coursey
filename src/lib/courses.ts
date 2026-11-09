@@ -119,9 +119,10 @@ export async function getCourses(params: any) {
 
 export async function getCourseDetail(id: string, userId?: string | null) {
   let course: any = await prisma.course.findFirst({
-    where: {id, status: "PUBLISHED"},
+    where: {id},
     select: {
       id: true,
+      status: true,
       title: true,
       description: true,
       category: true,
@@ -177,6 +178,19 @@ export async function getCourseDetail(id: string, userId?: string | null) {
   })
 
   if (!course) return null
+
+  let isPreview = false
+  if (course.status !== "PUBLISHED") {
+    if (!userId) return null
+    let viewer = await prisma.user.findUnique({
+      where: {id: userId},
+      select: {role: true, banned: true},
+    })
+    if (!viewer || viewer.banned) return null
+    let isOwner = course?.instructor?.id === userId
+    if (!isOwner && viewer.role !== "ADMIN") return null
+    isPreview = true
+  }
 
   let enrolled = false
   if (userId) {
@@ -235,6 +249,8 @@ export async function getCourseDetail(id: string, userId?: string | null) {
     lessonsCount,
     totalReadMinutes,
     isEnrolled: enrolled,
+    status: course.status,
+    isPreview,
   }
 }
 
