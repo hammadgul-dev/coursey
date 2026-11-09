@@ -98,6 +98,11 @@ export default async function CourseDetailPage({params}: any) {
 
   return (
     <main className="bg-white text-gray-800 dark:bg-gray-950 dark:text-gray-100">
+      {course.isPreview && (
+        <div className="border-b border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-sm font-medium text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
+          Preview Mode: This Course Is Not Public Yet ({course.status})
+        </div>
+      )}
       <CourseHero
         course={course}
         lessons={course.lessonsCount}
