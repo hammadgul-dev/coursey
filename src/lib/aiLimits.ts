@@ -30,5 +30,4 @@ export let AI_FEATURES: any = {
   chat: {limit: 20, model: MODEL_LIGHT, maxTokens: 1500, temperature: 0.4},
   summary: {limit: 10, model: MODEL_LIGHT, maxTokens: 1500, temperature: 0.3},
   quiz: {limit: 10, model: MODEL_HEAVY, maxTokens: 3000, temperature: 0.4},
-  test: {limit: 3, model: MODEL_LIGHT, maxTokens: 800, temperature: 0.4},
 }
