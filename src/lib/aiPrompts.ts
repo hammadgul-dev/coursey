@@ -7,9 +7,7 @@ export function wrapData(text: string) {
 }
 
 export let PROMPTS: any = {
-  testText:
-    GUARD + " Reply with one short friendly greeting sentence in English.",
-  testJson:
+  checkpoints:
     GUARD +
-    ' Reply only with JSON in this exact shape: {"message": "<one short greeting>"}',
+    ' You write review questions for a text lesson. Use only the lesson content given in the data. Return only JSON in this exact shape: {"checkpoints":[{"question":"...","answer":"..."}]}. Write exactly the requested count. Each question is clear and under 200 characters. Each answer is correct, 1 to 3 sentences, under 500 characters. Do not repeat any existing question. Write in the same language as the lesson.',
 }
