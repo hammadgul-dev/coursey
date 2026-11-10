@@ -19,6 +19,7 @@ import {
 } from "lucide-react"
 import {request} from "@/lib/request"
 import CheckpointEditor from "@/components/instructor-dashboard/CheckpointEditor"
+import AiButton from "@/components/instructor-dashboard/AiButton"
 
 let iconBtn =
   "cursor-pointer rounded-lg p-1.5 text-gray-400 transition-all hover:bg-gray-100 hover:text-indigo-600 active:scale-90 disabled:cursor-not-allowed disabled:opacity-30 dark:hover:bg-zinc-800 dark:hover:text-indigo-400"
@@ -47,6 +48,7 @@ export default function LessonItem({
   let [open, setOpen] = useState(false)
   let [adding, setAdding] = useState(false)
   let [busy, setBusy] = useState("")
+  let [suggestions, setSuggestions] = useState<any[]>([])
   let [title, setTitle] = useState(lesson?.title || "")
   let [minutes, setMinutes] = useState(String(lesson?.readMinutes || 1))
   let [content, setContent] = useState(lesson?.content || "")
@@ -117,6 +119,42 @@ export default function LessonItem({
     }
     toast.success("Lesson Deleted")
     router.refresh()
+  }
+
+  let suggest = async () => {
+    if (disabled) return
+    if (dirty) {
+      toast.error("Save Lesson First")
+      return
+    }
+    if ((lesson?.content || "").trim().length < 100) {
+      toast.error("Add Lesson Content First")
+      return
+    }
+    setBusy("ai")
+    let res: any = await request(
+      `/api/instructor/lessons/${lesson?.id}/ai/checkpoints`,
+      "POST",
+      {count: 3},
+    )
+    setBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let list = res?.data?.checkpoints || []
+    setSuggestions(
+      list.map((c: any, i: number) => ({
+        key: Date.now() + "-" + i,
+        question: c?.question || "",
+        answer: c?.answer || "",
+      })),
+    )
+    toast.success("Suggestions Ready")
+  }
+
+  let dropSuggestion = (key: string) => {
+    setSuggestions((prev: any[]) => prev.filter((s: any) => s.key !== key))
   }
 
   return (
@@ -246,6 +284,14 @@ export default function LessonItem({
                     checkpoint={c}
                   />
                 ))}
+                {suggestions.map((s: any) => (
+                  <CheckpointEditor
+                    key={s.key}
+                    lessonId={lesson?.id}
+                    checkpoint={{question: s.question, answer: s.answer}}
+                    onClose={() => dropSuggestion(s.key)}
+                  />
+                ))}
                 {adding && (
                   <CheckpointEditor
                     lessonId={lesson?.id}
@@ -253,14 +299,23 @@ export default function LessonItem({
                   />
                 )}
                 {!adding && (
-                  <button
-                    type="button"
-                    onClick={() => setAdding(true)}
-                    className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-indigo-400"
-                  >
-                    <ListChecks className="h-4 w-4" />
-                    Add Checkpoint
-                  </button>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setAdding(true)}
+                      className="flex cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-gray-300 px-3 py-1.5 text-sm font-medium text-gray-600 transition-all hover:border-indigo-500 hover:text-indigo-600 active:scale-95 dark:border-zinc-700 dark:text-zinc-400 dark:hover:text-indigo-400"
+                    >
+                      <ListChecks className="h-4 w-4" />
+                      Add Checkpoint
+                    </button>
+                    <AiButton
+                      label="Suggest With AI"
+                      busyLabel="Thinking"
+                      busy={busy === "ai"}
+                      disabled={disabled || checkpoints.length >= 10}
+                      onClick={suggest}
+                    />
+                  </div>
                 )}
               </div>
             </div>
