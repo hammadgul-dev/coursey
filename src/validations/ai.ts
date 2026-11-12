@@ -20,3 +20,8 @@ export let checkpointSuggestOutputSchema = z.object({
     .min(1)
     .max(5),
 })
+
+export let draftOutputSchema = z.object({
+  mismatch: z.boolean().optional(),
+  content: z.string().trim().max(20000).optional(),
+})
