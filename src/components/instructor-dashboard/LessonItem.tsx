@@ -153,6 +153,35 @@ export default function LessonItem({
     toast.success("Suggestions Ready")
   }
 
+  let draft = async () => {
+    if (disabled) return
+    if (title.trim() !== (lesson?.title || "").trim()) {
+      toast.error("Save Lesson First")
+      return
+    }
+    if (content.trim().length > 0) {
+      if (!window.confirm("Replace Current Content With AI Draft?")) return
+    }
+    setBusy("draft")
+    let res: any = await request(
+      `/api/instructor/lessons/${lesson?.id}/ai/draft`,
+      "POST",
+      {},
+    )
+    setBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let text = res?.data?.content || ""
+    if (!text) {
+      toast.error("Something Went Wrong")
+      return
+    }
+    setContent(text)
+    toast.success("Draft Ready, Review And Save")
+  }
+
   let dropSuggestion = (key: string) => {
     setSuggestions((prev: any[]) => prev.filter((s: any) => s.key !== key))
   }
@@ -263,17 +292,26 @@ export default function LessonItem({
                   placeholder="Write the lesson in markdown..."
                   className="w-full resize-y rounded-xl border border-gray-200 bg-white px-4 py-3 font-mono text-sm outline-none transition-all placeholder:text-gray-400 hover:border-indigo-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-800 dark:bg-zinc-950 dark:placeholder:text-zinc-600"
                 />
-                <button
-                  type="button"
-                  disabled={disabled || !dirty}
-                  onClick={save}
-                  className="mt-2 flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {busy === "save" && (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  )}
-                  {busy === "save" ? "Saving" : "Save Lesson"}
-                </button>
+                <div className="mt-2 flex w-full flex-wrap items-center justify-between gap-2">
+                  <button
+                    type="button"
+                    disabled={disabled || !dirty}
+                    onClick={save}
+                    className="flex cursor-pointer items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all hover:bg-indigo-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {busy === "save" && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                    {busy === "save" ? "Saving" : "Save Lesson"}
+                  </button>
+                  <AiButton
+                    label="Write Draft With AI"
+                    busyLabel="Writing"
+                    busy={busy === "draft"}
+                    disabled={disabled}
+                    onClick={draft}
+                  />
+                </div>
               </div>
 
               <div className="space-y-3">
@@ -299,7 +337,7 @@ export default function LessonItem({
                   />
                 )}
                 {!adding && (
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex w-full flex-wrap items-center justify-between gap-2">
                     <button
                       type="button"
                       onClick={() => setAdding(true)}
@@ -309,7 +347,7 @@ export default function LessonItem({
                       Add Checkpoint
                     </button>
                     <AiButton
-                      label="Suggest With AI"
+                      label="Suggest Checkpoints"
                       busyLabel="Thinking"
                       busy={busy === "ai"}
                       disabled={disabled || checkpoints.length >= 10}
