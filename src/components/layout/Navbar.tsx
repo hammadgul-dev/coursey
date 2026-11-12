@@ -6,13 +6,19 @@ import {GraduationCap, Menu, X} from "lucide-react"
 import {Button} from "@/components/ui/button"
 import ThemeToggle from "./ThemeToggle"
 
+function dashboardPath(role: string) {
+  if (role === "ADMIN") return "/admin-dashboard"
+  if (role === "INSTRUCTOR") return "/instructor-dashboard"
+  return "/student-dashboard"
+}
+
 function UserAvatar({user}: {user: any}) {
   let initial = (user?.name || "U").charAt(0).toUpperCase()
   return (
     <Link
-      href="/profile"
-      aria-label="Profile Settings"
-      title="Profile Settings"
+      href={dashboardPath(user?.role)}
+      aria-label="Go To Dashboard"
+      title="Go To Dashboard"
       className="block cursor-pointer rounded-full transition-all duration-200 hover:ring-2 hover:ring-primary/50 active:scale-95"
     >
       {user?.avatar ? (
