@@ -15,7 +15,7 @@ export let AI_FEATURES: any = {
     maxTokens: 1200,
     temperature: 0.6,
   },
-  learn: {limit: 5, model: MODEL_LIGHT, maxTokens: 1000, temperature: 0.6},
+  learn: {limit: 5, model: MODEL_LIGHT, maxTokens: 2000, temperature: 0.6},
   outline: {limit: 3, model: MODEL_HEAVY, maxTokens: 4000, temperature: 0.5},
   draft: {limit: 10, model: MODEL_HEAVY, maxTokens: 3500, temperature: 0.6},
   checkpoints: {
