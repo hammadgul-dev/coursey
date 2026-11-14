@@ -8,6 +8,7 @@ import {Check, ChevronDown, Loader2, Plus, Upload, X} from "lucide-react"
 import {categories, levels} from "@/lib/editorOptions"
 import {request} from "@/lib/request"
 import {uploadFile} from "@/lib/upload"
+import AiButton from "@/components/instructor-dashboard/AiButton"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
 import Curriculum from "@/components/instructor-dashboard/Curriculum"
 
@@ -31,6 +32,7 @@ export default function CourseEditor({course}: any) {
 
   let [busy, setBusy] = useState("")
   let [coverBusy, setCoverBusy] = useState("")
+  let [aiBusy, setAiBusy] = useState("")
   let [title, setTitle] = useState(course?.title || "")
   let [description, setDescription] = useState(course?.description || "")
   let [category, setCategory] = useState(course?.category || "")
@@ -50,6 +52,81 @@ export default function CourseEditor({course}: any) {
   }
 
   let removeLearn = (i: number) => setLearn(learn.filter((_, k) => k !== i))
+
+  let titleOk = title.trim().length >= 5
+
+  let detailsDirty = () =>
+    title.trim() !== (course?.title || "") ||
+    (category || "") !== (course?.category || "") ||
+    level !== (course?.level || "BEGINNER")
+
+  let aiDescription = async () => {
+    if (aiBusy || busy) return
+    if (!courseId) {
+      toast.error("Save The Draft First")
+      return
+    }
+    if (detailsDirty()) {
+      toast.error("Save Draft First")
+      return
+    }
+    if (
+      description.trim() &&
+      !window.confirm("Replace Current Description With AI Draft?")
+    )
+      return
+    setAiBusy("description")
+    let res: any = await request(
+      `/api/instructor/courses/${courseId}/ai/description`,
+      "POST",
+    )
+    setAiBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let text = res?.data?.description || ""
+    if (!text) {
+      toast.error("Something Went Wrong")
+      return
+    }
+    setDescription(text)
+    toast.success("Description Ready, Review And Save")
+  }
+
+  let aiLearn = async () => {
+    if (aiBusy || busy) return
+    if (!courseId) {
+      toast.error("Save The Draft First")
+      return
+    }
+    if (detailsDirty()) {
+      toast.error("Save Draft First")
+      return
+    }
+    if (
+      learn.some((x) => x.trim()) &&
+      !window.confirm("Replace Current Points With AI Suggestions?")
+    )
+      return
+    setAiBusy("learn")
+    let res: any = await request(
+      `/api/instructor/courses/${courseId}/ai/learn`,
+      "POST",
+    )
+    setAiBusy("")
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let list: string[] = res?.data?.learn || []
+    if (list.length === 0) {
+      toast.error("Something Went Wrong")
+      return
+    }
+    setLearn(list.slice(0, 8))
+    toast.success("Points Ready, Review And Save")
+  }
 
   let openPicker = () => {
     if (coverBusy) return
@@ -266,13 +343,22 @@ export default function CourseEditor({course}: any) {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <label className={labelCls}>
                   Short Description <span className="text-rose-500">*</span>
                 </label>
-                <span className={counterCls(descLen, 2000)}>
-                  {descLen} / 2000
-                </span>
+                <div className="mb-1.5 flex items-center gap-3">
+                  <AiButton
+                    label="Write With AI"
+                    busyLabel="Writing"
+                    busy={aiBusy === "description"}
+                    disabled={!titleOk || !!aiBusy || !!busy}
+                    onClick={aiDescription}
+                  />
+                  <span className={counterCls(descLen, 2000)}>
+                    {descLen} / 2000
+                  </span>
+                </div>
               </div>
               <textarea
                 value={description}
@@ -379,11 +465,20 @@ export default function CourseEditor({course}: any) {
             </div>
 
             <div>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <label className={labelCls}>What You&apos;ll Learn</label>
-                <span className={counterCls(learn.length, 8)}>
-                  {learn.length} / 8
-                </span>
+                <div className="mb-1.5 flex items-center gap-3">
+                  <AiButton
+                    label="Suggest Points"
+                    busyLabel="Suggesting"
+                    busy={aiBusy === "learn"}
+                    disabled={!titleOk || !!aiBusy || !!busy}
+                    onClick={aiLearn}
+                  />
+                  <span className={counterCls(learn.length, 8)}>
+                    {learn.length} / 8
+                  </span>
+                </div>
               </div>
               {learn.map((item, i) => (
                 <div key={i} className="flex items-center gap-2 pb-2">
