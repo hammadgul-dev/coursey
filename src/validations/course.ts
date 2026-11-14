@@ -47,7 +47,7 @@ export let courseSchema = z.object({
         .min(1, "Learning Point Is Empty")
         .max(200, "Learning Point Is Too Long"),
     )
-    .max(10, "Maximum 10 Learning Points")
+    .max(8, "Maximum 8 Learning Points")
     .default([]),
 })
 
