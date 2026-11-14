@@ -25,3 +25,13 @@ export let draftOutputSchema = z.object({
   mismatch: z.boolean().optional(),
   content: z.string().trim().max(20000).optional(),
 })
+
+export let descriptionOutputSchema = z.object({
+  mismatch: z.boolean().optional(),
+  description: z.string().trim().max(2000).optional(),
+})
+
+export let learnOutputSchema = z.object({
+  mismatch: z.boolean().optional(),
+  learn: z.array(z.string().trim().min(3).max(200)).max(8).optional(),
+})
