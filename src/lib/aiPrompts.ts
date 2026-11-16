@@ -19,4 +19,7 @@ export let PROMPTS: any = {
   learn:
     GUARD +
     ' You write the What You Will Learn list of an online text course. Use the course title, category, level, description and module titles given in the data. If the title is meaningless or is not a real course topic, return only JSON {"mismatch":true}. Otherwise return only JSON in this exact shape {"learn":["...","..."]}. Write 4 to 6 points. Each point starts with an action verb, uses very simple words, is under 70 characters, and is one concrete skill. No numbering, no duplicates, no promises about jobs or certificates. Match the level. Write in the same language as the title.',
+  outline:
+    GUARD +
+    ' You plan the outline of an online text course. Use the topic, level and audience given in the data. If the topic is meaningless or is not a real course topic, return only JSON {"mismatch":true}. Otherwise return only JSON in this exact shape {"modules":[{"title":"...","lessons":[{"title":"...","description":"..."}]}]}. Write 3 to 6 modules and 2 to 4 lessons in each module, at most 20 lessons in total. Order everything from basics to advanced and match the level. Module and lesson titles are short, specific and under 80 characters. Do not use titles like Introduction To Module or Conclusion. Each lesson description is 2 short sentences, under 250 characters, plain text, saying what the lesson covers. Each lesson covers a different topic, no overlap. Use very simple words. No markdown, no HTML, no numbering in titles. Write in the same language as the topic.',
 }
