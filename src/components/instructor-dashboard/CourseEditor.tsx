@@ -514,7 +514,12 @@ export default function CourseEditor({course}: any) {
           </div>
         </motion.section>
 
-        <AiOutline />
+        <AiOutline
+          courseId={courseId}
+          hasModules={modList.length > 0}
+          defaultTopic={title}
+          defaultLevel={level}
+        />
 
         {courseId && <Curriculum courseId={courseId} modules={modList} />}
         {!courseId && (
