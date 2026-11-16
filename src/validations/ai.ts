@@ -1,5 +1,7 @@
 import {z} from "zod"
 
+let levels = ["BEGINNER", "INTERMEDIATE", "ADVANCED"] as any
+
 export let checkpointSuggestInputSchema = z.object({
   count: z
     .number()
@@ -34,4 +36,46 @@ export let descriptionOutputSchema = z.object({
 export let learnOutputSchema = z.object({
   mismatch: z.boolean().optional(),
   learn: z.array(z.string().trim().min(3).max(200)).max(8).optional(),
+})
+
+export let outlineInputSchema = z.object({
+  topic: z
+    .string()
+    .trim()
+    .min(3, "Topic Must Be At Least 3 Characters")
+    .max(120, "Topic Is Too Long"),
+  level: z.enum(levels, {message: "Choose A Valid Level"}),
+  audience: z
+    .string()
+    .trim()
+    .max(120, "Audience Is Too Long")
+    .optional()
+    .or(z.literal("")),
+})
+
+let outlineModulesSchema = z
+  .array(
+    z.object({
+      title: z.string().trim().min(2).max(120),
+      lessons: z
+        .array(
+          z.object({
+            title: z.string().trim().min(2).max(120),
+            description: z.string().trim().min(10).max(500),
+          }),
+        )
+        .min(1)
+        .max(6),
+    }),
+  )
+  .min(1)
+  .max(8)
+
+export let outlineOutputSchema = z.object({
+  mismatch: z.boolean().optional(),
+  modules: outlineModulesSchema.optional(),
+})
+
+export let outlineApplySchema = z.object({
+  modules: outlineModulesSchema,
 })
