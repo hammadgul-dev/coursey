@@ -56,7 +56,13 @@ export async function GET(
         adminReviews: {
           orderBy: {createdAt: "desc"},
           take: 1,
-          select: {aiScore: true, aiNote: true, createdAt: true},
+          select: {
+            aiScore: true,
+            aiNote: true,
+            aiStrengths: true,
+            aiIssues: true,
+            createdAt: true,
+          },
         },
       },
     })
