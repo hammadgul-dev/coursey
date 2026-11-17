@@ -10,6 +10,7 @@ import {request} from "@/lib/request"
 import {uploadFile} from "@/lib/upload"
 import AiButton from "@/components/instructor-dashboard/AiButton"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
+import AiReview from "@/components/instructor-dashboard/AiReview"
 import Curriculum from "@/components/instructor-dashboard/Curriculum"
 
 let inputCls =
@@ -566,7 +567,7 @@ export default function CourseEditor({course}: any) {
             Admin will review your course before it is published.
           </p>
         </motion.div>
-
+        {courseId && <AiReview courseId={courseId} />}
         <motion.div
           initial={{opacity: 0, y: 12}}
           animate={{opacity: 1, y: 0}}
