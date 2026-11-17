@@ -87,3 +87,10 @@ export let reviewOutputSchema = z.object({
   issues: z.array(z.string().trim().min(3).max(400)).max(8),
   suggestions: z.array(z.string().trim().min(3).max(400)).max(8),
 })
+
+export let scoreOutputSchema = z.object({
+  score: z.number().min(0).max(100),
+  note: z.string().trim().min(3).max(600),
+  strengths: z.array(z.string().trim().min(3).max(400)).max(8),
+  issues: z.array(z.string().trim().min(3).max(400)).max(8),
+})
