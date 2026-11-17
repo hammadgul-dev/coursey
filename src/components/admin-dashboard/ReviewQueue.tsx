@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronDown,
   FileText,
+  Loader2,
   Sparkles,
   X,
 } from "lucide-react"
@@ -32,6 +33,47 @@ let fmt = (d: any) => {
   })
 }
 
+let scoreCls = (n: number) => {
+  if (n >= 80) return "text-emerald-500"
+  if (n >= 60) return "text-amber-500"
+  return "text-rose-500"
+}
+
+let toScore = (r: any) => {
+  if (!r || r?.aiScore === null || r?.aiScore === undefined) return null
+  return {
+    score: r?.aiScore || 0,
+    note: r?.aiNote || "",
+    strengths: r?.aiStrengths || [],
+    issues: r?.aiIssues || [],
+    createdAt: r?.createdAt || null,
+  }
+}
+
+function ScoreList({title, items, dot}: any) {
+  if (!items || items.length === 0) return null
+  return (
+    <div className="mt-3">
+      <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-zinc-400">
+        {title}
+      </p>
+      <ul className="space-y-1.5">
+        {items.map((x: string, i: number) => (
+          <li
+            key={i}
+            className="flex gap-2 text-xs text-gray-700 dark:text-zinc-300"
+          >
+            <span
+              className={`mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full ${dot}`}
+            />
+            <span>{x}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
 export default function ReviewQueue() {
   let router = useRouter()
   let [items, setItems] = useState([] as any[])
@@ -43,6 +85,9 @@ export default function ReviewQueue() {
   let [rejecting, setRejecting] = useState(null as any)
   let [reason, setReason] = useState("")
   let [busyId, setBusyId] = useState(null as any)
+  let [scores, setScores] = useState({} as any)
+  let [scoreOpen, setScoreOpen] = useState({} as any)
+  let [scoreBusy, setScoreBusy] = useState(null as any)
 
   useEffect(() => {
     let active = true
@@ -81,7 +126,33 @@ export default function ReviewQueue() {
       return
     }
     setDetails((p: any) => ({...p, [id]: res.data}))
+    let saved = toScore(res?.data?.adminReviews?.[0])
+    if (saved) {
+      setScores((p: any) => (p[id] ? p : {...p, [id]: saved}))
+    }
   }
+
+  let runScore = async (id: string) => {
+    if (scoreBusy || busyId) return
+    setScoreBusy(id)
+    let res: any = await request(`/api/admin/courses/${id}/ai-score`, "POST")
+    setScoreBusy(null)
+    if (!res?.ok) {
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let fresh = toScore(res?.data?.review)
+    if (!fresh) {
+      toast.error("Something Went Wrong")
+      return
+    }
+    setScores((p: any) => ({...p, [id]: fresh}))
+    setScoreOpen((p: any) => ({...p, [id]: true}))
+    toast.success("AI Score Ready")
+  }
+
+  let toggleScore = (id: string) =>
+    setScoreOpen((p: any) => ({...p, [id]: !p[id]}))
 
   let toggleReject = (id: string) => {
     setRejecting(rejecting === id ? null : id)
@@ -155,6 +226,7 @@ export default function ReviewQueue() {
         <AnimatePresence mode="popLayout">
           {items.map((c: any) => {
             let detail = details[c.id]
+            let score = scores[c.id]
             return (
               <motion.div
                 key={c.id}
@@ -188,13 +260,29 @@ export default function ReviewQueue() {
                   <span className="capitalize">
                     {(c.level || "").toLowerCase()}
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
-                    <Sparkles size={12} />
-                    AI Score: Coming Soon
-                  </span>
+                  {score ? (
+                    <button
+                      onClick={() => toggleScore(c.id)}
+                      className="inline-flex cursor-pointer items-center gap-1.5 rounded-md transition-colors duration-200 hover:text-indigo-600 dark:hover:text-indigo-400"
+                    >
+                      <Sparkles size={12} />
+                      AI Score:
+                      <span
+                        className={`font-semibold tabular-nums ${scoreCls(score.score)}`}
+                      >
+                        {score.score}
+                      </span>
+                      / 100
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 text-gray-400 dark:text-zinc-500">
+                      <Sparkles size={12} />
+                      AI Score: Not Run
+                    </span>
+                  )}
                 </div>
 
-                <div className="mt-3 border-t border-gray-100 pt-3 dark:border-zinc-800">
+                <div className="mt-3 grid grid-cols-2 gap-2 border-t border-gray-100 pt-3 dark:border-zinc-800">
                   <button
                     onClick={() => toggleOpen(c.id)}
                     className={`${outlineBtn} w-full`}
@@ -204,6 +292,22 @@ export default function ReviewQueue() {
                       size={14}
                       className={`transition-transform duration-200 ${open === c.id ? "rotate-180" : ""}`}
                     />
+                  </button>
+                  <button
+                    onClick={() => runScore(c.id)}
+                    disabled={!!scoreBusy || busyId === c.id}
+                    className={`${outlineBtn} w-full`}
+                  >
+                    {scoreBusy === c.id ? (
+                      <Loader2 size={14} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={14} />
+                    )}
+                    {scoreBusy === c.id
+                      ? "Scoring"
+                      : score
+                        ? "Run Again"
+                        : "Run AI Score"}
                   </button>
                 </div>
 
@@ -227,6 +331,49 @@ export default function ReviewQueue() {
                       : "Approve"}
                   </button>
                 </div>
+
+                <AnimatePresence initial={false}>
+                  {score && scoreOpen[c.id] && (
+                    <motion.div
+                      initial={{height: 0, opacity: 0}}
+                      animate={{height: "auto", opacity: 1}}
+                      exit={{height: 0, opacity: 0}}
+                      transition={{duration: 0.25, ease: "easeOut"}}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-3 rounded-lg border border-gray-200 p-3 dark:border-zinc-800">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-baseline gap-1">
+                            <span
+                              className={`text-2xl font-semibold tabular-nums ${scoreCls(score.score)}`}
+                            >
+                              {score.score}
+                            </span>
+                            <span className="text-xs text-gray-500 dark:text-zinc-400">
+                              / 100
+                            </span>
+                          </div>
+                          <span className="text-[11px] text-gray-400 dark:text-zinc-500">
+                            AI advisory · {fmt(score.createdAt)}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs leading-relaxed text-gray-700 dark:text-zinc-300">
+                          {score.note}
+                        </p>
+                        <ScoreList
+                          title="Strengths"
+                          items={score.strengths}
+                          dot="bg-emerald-500"
+                        />
+                        <ScoreList
+                          title="Issues"
+                          items={score.issues}
+                          dot="bg-rose-500"
+                        />
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 <AnimatePresence initial={false}>
                   {open === c.id && (
