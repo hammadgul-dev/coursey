@@ -167,11 +167,13 @@ model Review {
 }
 
 model AdminReview {
-  id        String   @id @default(cuid())
-  courseId  String
-  aiScore   Int?
-  aiNote    String?
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  courseId    String
+  aiScore     Int?
+  aiNote      String?
+  aiStrengths String[]
+  aiIssues    String[]
+  createdAt   DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
