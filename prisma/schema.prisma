@@ -99,6 +99,7 @@ model Lesson {
   module      Module   @relation(fields: [moduleId], references: [id], onDelete: Cascade)
 
   checkpoints Checkpoint[]
+  quiz        LessonQuiz?
   progress    LessonProgress[]
 
   @@index([moduleId])
@@ -178,4 +179,14 @@ model AdminReview {
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
+}
+
+model LessonQuiz {
+  id          String   @id @default(cuid())
+  lessonId    String   @unique
+  data        Json
+  contentHash String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
 }
