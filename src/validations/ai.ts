@@ -94,3 +94,24 @@ export let scoreOutputSchema = z.object({
   strengths: z.array(z.string().trim().min(3).max(400)).max(8),
   issues: z.array(z.string().trim().min(3).max(400)).max(8),
 })
+
+export let chatInputSchema = z.object({
+  question: z
+    .string()
+    .trim()
+    .min(1, "Question Is Required")
+    .max(500, "Question Is Too Long"),
+  history: z
+    .array(
+      z.object({
+        role: z.enum(["user", "assistant"], {message: "Invalid History"}),
+        content: z
+          .string()
+          .trim()
+          .min(1, "Invalid History")
+          .max(500, "Invalid History"),
+      }),
+    )
+    .max(6, "History Is Too Long")
+    .default([]),
+})
