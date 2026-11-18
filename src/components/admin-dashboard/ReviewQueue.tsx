@@ -98,7 +98,14 @@ export default function ReviewQueue() {
       )
       if (!active) return
       if (res?.ok) {
-        setItems(res?.data?.courses || [])
+        let list = res?.data?.courses || []
+        setItems(list)
+        let init: any = {}
+        for (let c of list) {
+          let s = toScore(c?.adminReviews?.[0])
+          if (s) init[c.id] = s
+        }
+        setScores(init)
       } else {
         toast.error(res?.error || "Something Went Wrong")
       }
@@ -148,7 +155,11 @@ export default function ReviewQueue() {
     }
     setScores((p: any) => ({...p, [id]: fresh}))
     setScoreOpen((p: any) => ({...p, [id]: true}))
-    toast.success("AI Score Ready")
+    if (res?.data?.cached) {
+      toast.success("No Changes Since Last Score")
+    } else {
+      toast.success("AI Score Ready")
+    }
   }
 
   let toggleScore = (id: string) =>
