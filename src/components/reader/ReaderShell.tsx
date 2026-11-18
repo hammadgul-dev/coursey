@@ -10,6 +10,10 @@ import {fireConfetti, stopConfetti} from "@/lib/confetti"
 
 let Ctx = createContext<any>(null)
 
+export function useReader() {
+  return useContext(Ctx) || {}
+}
+
 export function CompleteButton({lessonId}: any) {
   let {done, markDone, busy} = useContext(Ctx)
   let isDone = done.includes(lessonId)
