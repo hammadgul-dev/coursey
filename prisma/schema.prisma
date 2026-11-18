@@ -173,6 +173,7 @@ model AdminReview {
   aiNote      String?
   aiStrengths String[]
   aiIssues    String[]
+  contentHash String?
   createdAt   DateTime @default(now())
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
