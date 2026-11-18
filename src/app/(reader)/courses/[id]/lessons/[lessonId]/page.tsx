@@ -10,6 +10,7 @@ import ReaderShell, {CompleteButton} from "@/components/reader/ReaderShell"
 import LessonContent from "@/components/reader/LessonContent"
 import Checkpoint from "@/components/reader/Checkpoint"
 import LessonChat from "@/components/reader/LessonChat"
+import LessonTools from "@/components/reader/LessonTools"
 
 export async function generateMetadata({params}: any) {
   let {id, lessonId} = await params
@@ -113,6 +114,12 @@ export default async function LessonPage({params}: any) {
             )}
           </div>
         </Reveal>
+
+        {data.canTrack && (
+          <Reveal>
+            <LessonTools lessonId={data.current.id} />
+          </Reveal>
+        )}
 
         <div className="grid gap-3 pt-2 sm:grid-cols-2">
           {prev && !prev.locked ? (
