@@ -1,3 +1,4 @@
+import {createHash} from "crypto"
 import {prisma} from "@/lib/prisma"
 import {fail, ok} from "@/lib/api"
 import {requireRole} from "@/lib/session"
@@ -66,6 +67,40 @@ export async function POST(
     }
     if (totalChars < 200) return fail("Course Has Too Little Content", 400)
 
+    let payload = JSON.stringify({
+      t: course.title || "",
+      d: course.description || "",
+      c: course.category || "",
+      v: course.level || "",
+      p: course.learn || [],
+      m: modules.map((m: any) => ({
+        t: m?.title || "",
+        l: (m?.lessons || []).map((l: any) => ({
+          t: l?.title || "",
+          c: l?.content || "",
+          k: l?._count?.checkpoints || 0,
+        })),
+      })),
+    })
+    let contentHash = createHash("sha256").update(payload).digest("hex")
+
+    let last: any = await prisma.adminReview.findFirst({
+      where: {
+        courseId: course.id,
+        contentHash,
+        aiScore: {not: null},
+      },
+      orderBy: {createdAt: "desc"},
+      select: {
+        aiScore: true,
+        aiNote: true,
+        aiStrengths: true,
+        aiIssues: true,
+        createdAt: true,
+      },
+    })
+    if (last) return ok({review: last, cached: true})
+
     let limit = await checkAiLimit("score", user.id)
     if (!limit.allowed) return fail(limit.message, 429)
 
@@ -115,6 +150,7 @@ export async function POST(
     let row = await prisma.adminReview.create({
       data: {
         courseId: course.id,
+        contentHash,
         aiScore: Math.round(data?.score || 0),
         aiNote: data?.note || "",
         aiStrengths: (data?.strengths || []).slice(0, 5),
@@ -129,7 +165,7 @@ export async function POST(
       },
     })
 
-    return ok({review: row})
+    return ok({review: row, cached: false})
   } catch (e) {
     return aiErrorResponse(e)
   }
