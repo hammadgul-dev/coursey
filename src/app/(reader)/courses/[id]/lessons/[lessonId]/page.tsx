@@ -9,6 +9,7 @@ import Reveal from "@/components/ui/Reveal"
 import ReaderShell, {CompleteButton} from "@/components/reader/ReaderShell"
 import LessonContent from "@/components/reader/LessonContent"
 import Checkpoint from "@/components/reader/Checkpoint"
+import LessonChat from "@/components/reader/LessonChat"
 
 export async function generateMetadata({params}: any) {
   let {id, lessonId} = await params
@@ -153,6 +154,7 @@ export default async function LessonPage({params}: any) {
             </Link>
           )}
         </div>
+        {data.canTrack && <LessonChat lessonId={data.current.id} />}
       </article>
     </ReaderShell>
   )
