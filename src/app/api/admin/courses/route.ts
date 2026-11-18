@@ -63,7 +63,13 @@ export async function GET(req: Request) {
           adminReviews: {
             orderBy: {createdAt: "desc"},
             take: 1,
-            select: {aiScore: true, aiNote: true},
+            select: {
+              aiScore: true,
+              aiNote: true,
+              aiStrengths: true,
+              aiIssues: true,
+              createdAt: true,
+            },
           },
           _count: {select: {enrollments: true}},
         },
@@ -87,6 +93,7 @@ export async function GET(req: Request) {
         studentsCount: c?._count?.enrollments || 0,
         aiScore: c?.adminReviews?.[0]?.aiScore ?? null,
         aiNote: c?.adminReviews?.[0]?.aiNote ?? null,
+        adminReviews: c?.adminReviews || [],
       }
     })
 
