@@ -115,3 +115,20 @@ export let chatInputSchema = z.object({
     .max(6, "History Is Too Long")
     .default([]),
 })
+
+export let summaryOutputSchema = z.object({
+  points: z.array(z.string().trim().min(3).max(500)).min(5).max(8),
+})
+
+export let quizOutputSchema = z.object({
+  questions: z
+    .array(
+      z.object({
+        question: z.string().trim().min(5).max(400),
+        options: z.array(z.string().trim().min(1).max(250)).length(4),
+        correctIndex: z.number().int().min(0).max(3),
+        explanation: z.string().trim().min(3).max(500),
+      }),
+    )
+    .length(5),
+})
