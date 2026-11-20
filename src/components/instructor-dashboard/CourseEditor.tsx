@@ -8,6 +8,7 @@ import {Check, ChevronDown, Loader2, Plus, Upload, X} from "lucide-react"
 import {categories, levels} from "@/lib/editorOptions"
 import {request} from "@/lib/request"
 import {uploadFile} from "@/lib/upload"
+import {makeCover} from "@/lib/coverCanvas"
 import AiButton from "@/components/instructor-dashboard/AiButton"
 import AiOutline from "@/components/instructor-dashboard/AiOutline"
 import AiReview from "@/components/instructor-dashboard/AiReview"
@@ -127,6 +128,51 @@ export default function CourseEditor({course}: any) {
     }
     setLearn(list.slice(0, 8))
     toast.success("Points Ready, Review And Save")
+  }
+
+  let aiCover = async () => {
+    if (aiBusy || busy || coverBusy) return
+    if (!courseId) {
+      toast.error("Save The Draft First")
+      return
+    }
+    if (detailsDirty()) {
+      toast.error("Save Draft First")
+      return
+    }
+    if (cover && !window.confirm("Replace Current Cover With AI Cover?")) return
+    setAiBusy("cover")
+    let res: any = await request(
+      `/api/instructor/courses/${courseId}/ai/cover-title`,
+      "POST",
+    )
+    if (!res?.ok) {
+      setAiBusy("")
+      toast.error(res?.error || "Something Went Wrong")
+      return
+    }
+    let file = await makeCover(
+      res?.data?.short || title.trim().slice(0, 30),
+      Number(res?.data?.palette) || 0,
+      category,
+      level,
+    ).catch(() => null)
+    if (!file) {
+      setAiBusy("")
+      toast.error("Cover Could Not Be Created")
+      return
+    }
+    let up: any = await uploadFile(
+      `/api/upload/cover?courseId=${courseId}`,
+      file,
+    )
+    setAiBusy("")
+    if (!up?.ok) {
+      toast.error(up?.error || "Something Went Wrong")
+      return
+    }
+    setCover(up?.data?.cover || "")
+    toast.success("Cover Generated")
   }
 
   let openPicker = () => {
@@ -452,6 +498,13 @@ export default function CourseEditor({course}: any) {
                     Remove
                   </button>
                 )}
+                <AiButton
+                  label="Generate Cover"
+                  busyLabel="Generating"
+                  busy={aiBusy === "cover"}
+                  disabled={!titleOk || !!aiBusy || !!busy || !!coverBusy}
+                  onClick={aiCover}
+                />
                 <span className="text-xs text-gray-500 dark:text-zinc-400">
                   Jpg, Png Or Webp, Max 3 Mb
                 </span>
