@@ -25,7 +25,7 @@ export let AI_FEATURES: any = {
     temperature: 0.4,
   },
   review: {limit: 3, model: MODEL_HEAVY, maxTokens: 3000, temperature: 0.3},
-  cover: {limit: 5, model: MODEL_LIGHT, maxTokens: 500, temperature: 0.4},
+  cover: {limit: 5, model: MODEL_LIGHT, maxTokens: 1000, temperature: 0.4},
   score: {limit: 30, model: MODEL_HEAVY, maxTokens: 3000, temperature: 0.3},
   chat: {limit: 20, model: MODEL_LIGHT, maxTokens: 1500, temperature: 0.4},
   summary: {limit: 10, model: MODEL_LIGHT, maxTokens: 2500, temperature: 0.3},
