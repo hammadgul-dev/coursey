@@ -132,3 +132,8 @@ export let quizOutputSchema = z.object({
     )
     .length(5),
 })
+
+export let coverOutputSchema = z.object({
+  short: z.string().trim().min(1).max(120),
+  palette: z.number(),
+})
