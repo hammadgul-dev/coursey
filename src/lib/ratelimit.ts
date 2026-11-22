@@ -52,3 +52,19 @@ export async function checkAiLimit(feature: string, userId: string) {
 
   return {allowed: true, busy: false, message: ""}
 }
+
+export async function checkRate(key: string, limit: number, windowSec: number) {
+  let count = await redis.incr(key)
+  let ttl = await redis.ttl(key)
+  if (ttl < 0) {
+    await redis.expire(key, windowSec)
+    ttl = windowSec
+  }
+  if (count > limit) {
+    return {
+      allowed: false,
+      message: "Too Many Attempts, Try Again In " + waitText(ttl),
+    }
+  }
+  return {allowed: true, message: ""}
+}
