@@ -28,23 +28,26 @@ enum Level {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  role         Role     @default(STUDENT)
-  headline     String?
-  bio          String?
-  avatar       String?
-  banned       Boolean  @default(false)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  passwordHash  String
+  role          Role      @default(STUDENT)
+  headline      String?
+  bio           String?
+  avatar        String?
+  banned        Boolean   @default(false)
+  emailVerified DateTime?
+  tokenVersion  Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   courses     Course[]
   enrollments Enrollment[]
   progress    LessonProgress[]
   watchlist   Watchlist[]
   reviews     Review[]
+  resetTokens PasswordResetToken[]
 
   @@index([role])
 }
@@ -176,7 +179,7 @@ model AdminReview {
   aiIssues    String[]
   contentHash String?
   createdAt   DateTime @default(now())
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
   @@index([courseId])
 }
@@ -189,4 +192,16 @@ model LessonQuiz {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   lesson      Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
