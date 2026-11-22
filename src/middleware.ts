@@ -18,7 +18,11 @@ export async function middleware(req: NextRequest) {
   let token = await getToken({req, secret: process.env.NEXTAUTH_SECRET})
   let path = req.nextUrl.pathname || ""
   let role = (token?.role as string) || ""
-  let isAuthPage = path === "/login" || path === "/signup"
+  let isAuthPage =
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password" ||
+    path === "/reset-password"
 
   if (isAuthPage) {
     if (token && dashboards[role]) {
@@ -48,5 +52,7 @@ export const config = {
     "/profile/:path*",
     "/login",
     "/signup",
+    "/forgot-password",
+    "/reset-password",
   ],
 }
