@@ -29,6 +29,7 @@ export let authOptions: any = {
           name: user.name,
           email: user.email,
           role: user.role,
+          tokenVersion: user.tokenVersion || 0,
         } as any
       },
     }),
@@ -38,6 +39,7 @@ export let authOptions: any = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.tokenVersion = user.tokenVersion || 0
       }
       return token
     },
@@ -45,6 +47,7 @@ export let authOptions: any = {
       if (session?.user) {
         session.user.id = token?.id || ""
         session.user.role = token?.role || "STUDENT"
+        session.user.tokenVersion = token?.tokenVersion || 0
       }
       return session
     },
