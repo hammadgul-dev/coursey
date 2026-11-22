@@ -14,6 +14,19 @@ let rules = [
   {prefix: "/admin-dashboard", role: "ADMIN"},
 ]
 
+async function sessionValid(req: NextRequest) {
+  try {
+    let res = await fetch(new URL("/api/session-check", req.url), {
+      headers: {cookie: req.headers.get("cookie") || ""},
+      cache: "no-store",
+    })
+    let data: any = await res.json().catch(() => null)
+    return !!data?.valid
+  } catch {
+    return true
+  }
+}
+
 export async function middleware(req: NextRequest) {
   let token = await getToken({req, secret: process.env.NEXTAUTH_SECRET})
   let path = req.nextUrl.pathname || ""
@@ -26,7 +39,14 @@ export async function middleware(req: NextRequest) {
 
   if (isAuthPage) {
     if (token && dashboards[role]) {
-      return NextResponse.redirect(new URL(dashboards[role], req.url))
+      let valid = await sessionValid(req)
+      if (valid) {
+        return NextResponse.redirect(new URL(dashboards[role], req.url))
+      }
+      let res = NextResponse.next()
+      res.cookies.delete("next-auth.session-token")
+      res.cookies.delete("__Secure-next-auth.session-token")
+      return res
     }
     return NextResponse.next()
   }
