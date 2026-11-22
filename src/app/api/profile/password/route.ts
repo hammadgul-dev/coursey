@@ -38,7 +38,7 @@ export async function POST(req: Request) {
 
     await prisma.user.update({
       where: {id: userId},
-      data: {passwordHash},
+      data: {passwordHash, tokenVersion: {increment: 1}},
       select: {id: true},
     })
 
