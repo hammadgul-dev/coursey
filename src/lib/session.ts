@@ -7,6 +7,15 @@ export async function getSessionUser() {
   let session: any = await getServerSession(authOptions)
   let id = session?.user?.id || ""
   if (!id) return null
+
+  let version = Number(session?.user?.tokenVersion || 0)
+  let account = await prisma.user.findUnique({
+    where: {id},
+    select: {tokenVersion: true},
+  })
+  if (!account) return null
+  if (account.tokenVersion !== version) return null
+
   return {id: id as string}
 }
 
