@@ -165,7 +165,8 @@ export default function ProfileForm({user}: {user: any}) {
       return
     }
     setPass({current: "", next: "", confirm: ""})
-    toast.success("Password Changed")
+    toast.success("Password Changed, Please Log In Again")
+    await signOut({callbackUrl: "/login"})
   }
 
   let logout = async () => {
