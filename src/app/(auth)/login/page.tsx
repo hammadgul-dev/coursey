@@ -108,6 +108,13 @@ export default function LoginPage() {
         redirect: false,
       })
 
+      if (res?.error === "Please Verify Your Email First") {
+        toast.error("Please Verify Your Email First")
+        router.push("/verify-email?email=" + encodeURIComponent(email))
+        setLoading(false)
+        return
+      }
+
       if (res?.error) {
         let msg =
           res.error === "CredentialsSignin"
