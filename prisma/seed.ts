@@ -46,6 +46,11 @@ async function main() {
     },
   })
 
+  await prisma.user.updateMany({
+    where: {email: {in: [email, "sample.instructor@coursey.com"]}},
+    data: {emailVerified: new Date()},
+  })
+
   let existing = await prisma.course.findFirst({
     where: {
       instructorId: instructor.id,
