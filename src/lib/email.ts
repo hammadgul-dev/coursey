@@ -52,3 +52,16 @@ export function resetEmailHtml(link: string) {
     "</div>"
   )
 }
+
+export function verifyEmailHtml(link: string) {
+  return (
+    '<div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px">' +
+    '<h2 style="color:#4F46E5;margin:0 0 12px">Verify Your Email</h2>' +
+    '<p style="color:#374151;font-size:14px;line-height:1.6">Welcome to Coursey. Please confirm your email to activate your account. This link works for 24 hours and can be used once.</p>' +
+    '<p style="margin:24px 0"><a href="' +
+    link +
+    '" style="background:#4F46E5;color:#fff;padding:12px 20px;border-radius:10px;text-decoration:none;font-size:14px">Verify Email</a></p>' +
+    '<p style="color:#6B7280;font-size:12px;line-height:1.6">If you did not create an account, you can safely ignore this email.</p>' +
+    "</div>"
+  )
+}
