@@ -3,11 +3,15 @@ import {prisma} from "@/lib/prisma"
 import {fail, ok, serverError} from "@/lib/api"
 import {requireRole} from "@/lib/session"
 import {passwordSchema} from "@/validations/profile"
+import {checkRate} from "@/lib/ratelimit"
 
 export async function POST(req: Request) {
   try {
     let {error, user} = await requireRole(["STUDENT", "INSTRUCTOR", "ADMIN"])
     if (error) return error
+
+    let limit = await checkRate("rl:password:user:" + (user?.id || ""), 5, 900)
+    if (!limit.allowed) return fail(limit.message, 429)
 
     let body: any = await req.json().catch(() => null)
     if (!body) return fail("Invalid Request", 400)
