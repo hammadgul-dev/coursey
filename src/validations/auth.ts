@@ -28,3 +28,10 @@ export let resetSchema = z.object({
     .regex(/^[a-f0-9]+$/, "Invalid Or Expired Link"),
   password: passwordRule,
 })
+
+export let verifySchema = z.object({
+  token: z
+    .string()
+    .length(64, "Invalid Or Expired Link")
+    .regex(/^[a-f0-9]+$/, "Invalid Or Expired Link"),
+})
