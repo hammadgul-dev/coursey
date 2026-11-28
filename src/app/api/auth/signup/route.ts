@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs"
 import {prisma} from "@/lib/prisma"
 import {signupSchema} from "@/validations/auth"
 import {hasMailServer} from "@/lib/email"
+import {sendVerification} from "@/lib/verify"
 
 export async function POST(req: Request) {
   try {
@@ -41,7 +42,9 @@ export async function POST(req: Request) {
       select: {id: true, role: true},
     })
 
-    return NextResponse.json({user}, {status: 201})
+    await sendVerification(user.id, email).catch(() => false)
+
+    return NextResponse.json({user, verifyRequired: true}, {status: 201})
   } catch (err: any) {
     return NextResponse.json(
       {error: "Something Went Wrong, Try Again"},
