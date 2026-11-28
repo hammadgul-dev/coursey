@@ -140,23 +140,8 @@ export default function SignupPage() {
         return
       }
 
-      let login = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      })
-
-      if (login?.error) {
-        toast.success("Account Created, Please Log In")
-        router.replace("/login")
-        return
-      }
-
-      let session = await getSession()
-      let role = (session?.user as any)?.role || ""
-      toast.success("Account Created")
-      router.replace(dashboards[role] || "/login")
-      router.refresh()
+      toast.success("Account Created, Check Your Email")
+      router.replace("/verify-email?email=" + encodeURIComponent(email))
     } catch {
       toast.error("Something Went Wrong")
       setLoading(false)
