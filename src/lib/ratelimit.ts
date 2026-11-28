@@ -68,3 +68,26 @@ export async function checkRate(key: string, limit: number, windowSec: number) {
   }
   return {allowed: true, message: ""}
 }
+
+export async function isLimited(key: string, limit: number) {
+  let count = Number(await redis.get(key)) || 0
+  if (count >= limit) {
+    let ttl = await redis.ttl(key)
+    return {
+      allowed: false,
+      message:
+        "Too Many Attempts, Try Again In " + waitText(ttl > 0 ? ttl : 60),
+    }
+  }
+  return {allowed: true, message: ""}
+}
+
+export async function hitRate(key: string, windowSec: number) {
+  await redis.incr(key)
+  let ttl = await redis.ttl(key)
+  if (ttl < 0) await redis.expire(key, windowSec)
+}
+
+export async function resetRate(key: string) {
+  await redis.del(key)
+}
