@@ -23,6 +23,8 @@ export let authOptions: any = {
 
         let valid = await bcrypt.compare(password, user.passwordHash)
         if (!valid) return null
+        if (!user.emailVerified)
+          throw new Error("Please Verify Your Email First")
 
         return {
           id: user.id,
